@@ -1,0 +1,843 @@
+{
+  "library": {
+    "name": "@podplay/sanctuary-components",
+    "version": "1.0.0",
+    "description": "Neurodivergent-friendly component library for Podplay Sanctuary AI development platform",
+    "tags": ["react", "typescript", "accessibility", "neurodivergent", "sanctuary", "ai", "components"],
+    "accessibility": {
+      "neurodivergentFriendly": true,
+      "wcagCompliant": true,
+      "reducedMotionSupport": true,
+      "screenReaderCompatible": true,
+      "keyboardNavigable": true
+    }
+  },
+  "components": [
+    {
+      "name": "AuroraBackground",
+      "category": "effects",
+      "description": "Mesmerizing aurora-like animated background perfect for sanctuary environments. Creates flowing, ethereal light effects that are calming and non-distracting.",
+      "useCases": [
+        "Sanctuary page backgrounds",
+        "Calming interface environments", 
+        "Neurodivergent-friendly visual effects",
+        "Meditation or focus applications",
+        "Immersive content overlays"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "sensoryFriendly": true,
+        "cognitiveSupport": true
+      },
+      "codeExample": "<AuroraBackground>\n  <div className=\"text-center\">\n    <h1>Welcome to the Sanctuary</h1>\n    <p>A calming space for focus</p>\n  </div>\n</AuroraBackground>",
+      "props": {
+        "children": "ReactNode - Content to display over aurora",
+        "showRadialGradient": "boolean - Show gradient mask (default: true)",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["aurora", "background", "calming", "sanctuary", "animation", "neurodivergent"]
+    },
+    {
+      "name": "BackgroundGradientAnimation", 
+      "category": "effects",
+      "description": "Dynamic animated gradient background with fluid, morphing colors and optional mouse interaction. Creates immersive environments with flowing visual effects.",
+      "useCases": [
+        "Interactive sanctuary environments",
+        "Immersive application backgrounds",
+        "Creative studio interfaces",
+        "Dynamic visual experiences",
+        "Mouse-responsive environments"
+      ],
+      "accessibility": {
+        "reducedMotion": false,
+        "sensoryFriendly": false,
+        "cognitiveSupport": true
+      },
+      "codeExample": "<BackgroundGradientAnimation interactive={true}>\n  <div className=\"flex items-center justify-center h-screen\">\n    <h1>Interactive Sanctuary</h1>\n  </div>\n</BackgroundGradientAnimation>",
+      "props": {
+        "gradientBackgroundStart": "string - Starting gradient color",
+        "gradientBackgroundEnd": "string - Ending gradient color", 
+        "firstColor": "string - First animated color (RGB)",
+        "interactive": "boolean - Enable mouse interaction",
+        "children": "ReactNode - Content overlay"
+      },
+      "keywords": ["gradient", "animation", "interactive", "fluid", "background", "immersive"]
+    },
+    {
+      "name": "SplashCursor",
+      "category": "effects", 
+      "description": "Interactive fluid simulation cursor effect creating beautiful liquid-like trails that follow mouse movement. Perfect for immersive, calming interaction experiences.",
+      "useCases": [
+        "Interactive cursor effects",
+        "Fluid simulation interfaces",
+        "Calming interaction feedback",
+        "Creative application cursors",
+        "Immersive user experiences"
+      ],
+      "accessibility": {
+        "reducedMotion": false,
+        "sensoryFriendly": true,
+        "cognitiveSupport": false
+      },
+      "codeExample": "<SplashCursor\n  SPLAT_FORCE={3000}\n  DENSITY_DISSIPATION={5.0}\n/>",
+      "props": {
+        "SPLAT_RADIUS": "number - Splash effect size",
+        "SPLAT_FORCE": "number - Interaction force",
+        "DENSITY_DISSIPATION": "number - Fade speed",
+        "VELOCITY_DISSIPATION": "number - Movement fade"
+      },
+      "keywords": ["cursor", "fluid", "interactive", "webgl", "animation", "splash"]
+    },
+    {
+      "name": "GlowingEffect",
+      "category": "ui",
+      "description": "Interactive glowing border effect that follows mouse movement around elements. Perfect for highlighting interactive components in a calming, accessible way.",
+      "useCases": [
+        "Interactive button highlights",
+        "Focus indicators for accessibility",
+        "Card hover effects",
+        "Form element highlighting",
+        "Navigation emphasis"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "sensoryFriendly": true,
+        "cognitiveSupport": true,
+        "keyboardNavigation": true
+      },
+      "codeExample": "<div className=\"relative\">\n  <GlowingEffect disabled={false} />\n  <button className=\"px-6 py-3 bg-purple-600 rounded-lg\">\n    Sanctuary Button\n  </button>\n</div>",
+      "props": {
+        "blur": "number - Glow blur intensity",
+        "proximity": "number - Activation distance",
+        "spread": "number - Glow angular spread", 
+        "variant": "'default' | 'white' - Color variant",
+        "disabled": "boolean - Effect state"
+      },
+      "keywords": ["glow", "interactive", "border", "highlight", "accessibility", "focus"]
+    },
+    {
+      "name": "SanctuaryLayout",
+      "category": "sanctuary",
+      "description": "Main layout component providing navigation, service monitoring, and theme switching. Designed specifically for neurodivergent users with comprehensive accessibility features.",
+      "useCases": [
+        "Main application layout",
+        "Sanctuary page wrapper",
+        "Navigation and service monitoring",
+        "Theme-aware layouts",
+        "Accessible application structure"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "highContrast": true,
+        "screenReader": true,
+        "keyboardNavigation": true,
+        "sensoryFriendly": true,
+        "cognitiveSupport": true
+      },
+      "codeExample": "<SanctuaryLayout currentPage=\"Memory Palace\">\n  <div className=\"space-y-6\">\n    <h1>Welcome to Memory Palace</h1>\n    <p>Your AI-powered memory system</p>\n  </div>\n</SanctuaryLayout>",
+      "props": {
+        "children": "ReactNode - Page content",
+        "currentPage": "string - Active page name"
+      },
+      "features": {
+        "navigation": "7-page sanctuary navigation",
+        "serviceMonitoring": "Real-time backend service status",
+        "themeSwitching": "Aurora, Gradient, Sanctuary themes",
+        "responsiveDesign": "Mobile-first responsive layout"
+      },
+      "keywords": ["layout", "navigation", "sanctuary", "accessibility", "neurodivergent", "theme"]
+    },
+    {
+      "name": "ImmersiveLoader",
+      "category": "effects",
+      "description": "Magical loading experience featuring Mama Bear climbing trees for honey, rocket launches, and floating honey particles. Perfect for environment spin-ups and creating delightful waiting experiences.",
+      "useCases": [
+        "Environment deployment loading",
+        "Application startup sequences",
+        "Magical loading experiences",
+        "Neurodivergent-friendly loading states",
+        "Character-driven loading animations",
+        "Immersive sanctuary transitions"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "sensoryFriendly": true,
+        "cognitiveSupport": true,
+        "characterNarrative": true
+      },
+      "codeExample": "<ImmersiveLoader\n  message=\"Preparing your sanctuary...\"\n  showBearClimbing={true}\n  showRocketLaunch={true}\n  onComplete={() => console.log('Loading complete!')}\n/>",
+      "props": {
+        "message": "string - Loading message to display",
+        "progress": "number - Current progress (0-100)",
+        "phaseDuration": "number - Duration per phase in ms",
+        "showBearClimbing": "boolean - Enable Mama Bear animation",
+        "showRocketLaunch": "boolean - Enable rocket launch effects",
+        "showHoneyParticles": "boolean - Enable floating particles",
+        "onComplete": "() => void - Completion callback",
+        "reducedMotion": "boolean - Accessibility mode"
+      },
+      "features": {
+        "mamaBearClimbing": "Animated bear climbing trees for honey",
+        "rocketLaunch": "Rocket launching with flame trails",
+        "honeyParticles": "Floating amber particles animation",
+        "progressivePhases": "4-phase loading: initializing → climbing → launching → completed",
+        "magicalNarrative": "Storytelling approach to loading states"
+      },
+      "keywords": ["loader", "mama-bear", "rocket", "honey", "magical", "immersive", "character", "sanctuary", "loading"]
+    },
+    {
+      "name": "LivingSanctuaryBackground",
+      "category": "effects",
+      "description": "Living, breathing background with 5-layer gradient system, mouse interaction, and multiple color schemes. Creates environments so beautiful users want to spend hours in the sanctuary.",
+      "useCases": [
+        "Immersive sanctuary environments",
+        "Interactive application backgrounds",
+        "Mouse-responsive interfaces",
+        "Multi-theme sanctuary experiences",
+        "Long-duration comfortable environments",
+        "Neurodivergent-friendly ambiences"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "sensoryFriendly": true,
+        "cognitiveSupport": true,
+        "multipleColorSchemes": true,
+        "safariCompatible": true
+      },
+      "codeExample": "<LivingSanctuaryBackground\n  interactive={true}\n  colorScheme=\"sanctuary\"\n  reducedMotion={false}\n>\n  <div className=\"p-8\">\n    <h1>Your Living Sanctuary</h1>\n  </div>\n</LivingSanctuaryBackground>",
+      "props": {
+        "children": "ReactNode - Content over background",
+        "interactive": "boolean - Enable mouse interaction",
+        "colorScheme": "'sanctuary' | 'forest' | 'ocean' | 'sunset' | 'aurora' - Theme",
+        "animationSpeed": "number - Animation speed multiplier",
+        "reducedMotion": "boolean - Accessibility mode",
+        "opacity": "number - Background opacity (0-1)"
+      },
+      "features": {
+        "fiveLayerGradients": "Multiple gradient layers with blend modes",
+        "mouseInteraction": "Interactive gradient follows mouse movement",
+        "colorSchemes": "5 beautiful themes: sanctuary, forest, ocean, sunset, aurora",
+        "safariCompatibility": "Blur layers work across all browsers",
+        "fluidAnimations": "Continuously morphing background patterns"
+      },
+      "keywords": ["background", "living", "interactive", "gradient", "mouse", "sanctuary", "immersive", "themes", "beautiful"]
+    },
+    {
+      "name": "ExpandableChat",
+      "category": "chat",
+      "description": "Expandable floating chat interface with configurable positioning and sizing. Perfect for AI assistance and neurodivergent-friendly communication with smooth animations and accessibility features.",
+      "useCases": [
+        "AI assistant chat interfaces",
+        "Customer support chat bubbles",
+        "Contextual help systems",
+        "Floating communication panels",
+        "Accessible chat experiences"
+      ],
+      "accessibility": {
+        "keyboardNavigable": true,
+        "screenReaderFriendly": true,
+        "reducedMotion": true,
+        "focusManagement": true
+      },
+      "codeExample": "<ExpandableChat\n  position=\"bottom-right\"\n  size=\"md\"\n  icon={<MessageCircle />}\n>\n  <ChatContent />\n</ExpandableChat>",
+      "props": {
+        "position": "'bottom-right' | 'bottom-left' - Chat position",
+        "size": "'sm' | 'md' | 'lg' | 'xl' | 'full' - Chat size",
+        "icon": "ReactNode - Custom chat trigger icon",
+        "children": "ReactNode - Chat content"
+      },
+      "keywords": ["chat", "expandable", "floating", "ai", "communication", "accessible", "neurodivergent"]
+    },
+    {
+      "name": "AnimatedList",
+      "category": "animation",
+      "description": "Smooth animated list component with configurable timing and spring animations. Creates engaging, neurodivergent-friendly list presentations with controlled motion.",
+      "useCases": [
+        "Feature showcase lists",
+        "Progressive content reveal",
+        "Notification displays",
+        "Interactive demonstrations",
+        "Gentle content transitions"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "gentleAnimations": true,
+        "configurableSpeed": true
+      },
+      "codeExample": "<AnimatedList delay={1000}>\n  <div>Item 1</div>\n  <div>Item 2</div>\n  <div>Item 3</div>\n</AnimatedList>",
+      "props": {
+        "delay": "number - Animation delay between items (ms)",
+        "className": "string - Additional CSS classes",
+        "children": "ReactNode - List items to animate"
+      },
+      "keywords": ["animation", "list", "progressive", "gentle", "neurodivergent", "reveal"]
+    },
+    {
+      "name": "ChatBubble",
+      "category": "chat",
+      "description": "Flexible chat bubble component with sent/received variants and AI-optimized layouts. Designed for accessible, neurodivergent-friendly conversations with clear visual hierarchy.",
+      "useCases": [
+        "AI conversation interfaces",
+        "Chat applications",
+        "Message displays",
+        "Customer support systems",
+        "Interactive dialogue systems"
+      ],
+      "accessibility": {
+        "clearVisualHierarchy": true,
+        "contrastOptimized": true,
+        "screenReaderFriendly": true,
+        "cognitiveSupport": true
+      },
+      "codeExample": "<ChatBubble variant=\"received\" layout=\"ai\">\n  <ChatBubbleAvatar />\n  <ChatBubbleMessage>\n    Hello! How can I help?\n  </ChatBubbleMessage>\n</ChatBubble>",
+      "props": {
+        "variant": "'sent' | 'received' - Message direction",
+        "layout": "'default' | 'ai' - Layout variant",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["chat", "bubble", "message", "ai", "conversation", "accessible", "neurodivergent"]
+    },
+    {
+      "name": "ScoutUI",
+      "category": "workspace",
+      "description": "Comprehensive workspace interface with sidebar navigation, activity tracking, and integrated chat system. Built for neurodivergent developers with focus management and accessibility features.",
+      "useCases": [
+        "Development workspace interfaces",
+        "Project management dashboards",
+        "AI-assisted coding environments",
+        "Collaborative development tools",
+        "Accessible development interfaces"
+      ],
+      "accessibility": {
+        "keyboardNavigation": true,
+        "focusManagement": true,
+        "reducedMotion": true,
+        "clearVisualHierarchy": true,
+        "neurodivergentOptimized": true
+      },
+      "codeExample": "<ScoutUI>\n  <ScoutSidebar />\n  <ScoutMainContent />\n  <ScoutActivityPanel />\n</ScoutUI>",
+      "props": {
+        "className": "string - Additional CSS classes",
+        "initialTab": "string - Default active tab",
+        "showActivityPanel": "boolean - Show activity sidebar"
+      },
+      "keywords": ["workspace", "development", "sidebar", "activity", "neurodivergent", "accessible", "productivity"]
+    },
+    {
+      "name": "ScoutUI2",
+      "category": "workspace",
+      "description": "AI-powered interface generation workspace with step-by-step progress tracking and file generation. Features animated progress steps and neurodivergent-friendly design patterns.",
+      "useCases": [
+        "AI interface generation",
+        "Step-by-step project workflows",
+        "Code generation interfaces",
+        "Progress tracking dashboards",
+        "Automated development tools"
+      ],
+      "accessibility": {
+        "progressTracking": true,
+        "stepByStepGuidance": true,
+        "reducedMotion": true,
+        "neurodivergentOptimized": true,
+        "keyboardAccessible": true
+      },
+      "codeExample": "<ScoutUI2\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n  theme=\"system\"\n/>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Enhanced spacing and visual clarity",
+        "theme": "'light' | 'dark' | 'system' - Visual theme",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["ai-generation", "progress-tracking", "step-by-step", "neurodivergent", "accessible", "interface-builder"]
+    },
+    {
+      "name": "ScoutUI3", 
+      "category": "workspace",
+      "description": "Multi-platform social content generation studio with platform-specific optimization and analytics preview. Designed for content creators with accessibility features.",
+      "useCases": [
+        "Social media content creation",
+        "Multi-platform publishing tools",
+        "Content optimization interfaces",
+        "Social analytics dashboards",
+        "Creator productivity tools"
+      ],
+      "accessibility": {
+        "platformSelection": true,
+        "contentPreview": true,
+        "analyticsOverview": true,
+        "neurodivergentOptimized": true,
+        "keyboardNavigation": true
+      },
+      "codeExample": "<ScoutUI3\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n  theme=\"system\"\n/>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility", 
+        "neurodivergentMode": "boolean - Enhanced spacing and visual clarity",
+        "theme": "'light' | 'dark' | 'system' - Visual theme",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["social-media", "content-creation", "multi-platform", "analytics", "neurodivergent", "creator-tools"]
+    },
+    {
+      "name": "ScoutUI4",
+      "category": "workspace", 
+      "description": "Advanced project management workspace with AI tools integration, dynamic header effects, and comprehensive project tracking. Full-featured development environment.",
+      "useCases": [
+        "Project management dashboards",
+        "AI tools integration interfaces",
+        "Development workspace environments",
+        "Team collaboration platforms",
+        "Enterprise development tools"
+      ],
+      "accessibility": {
+        "projectManagement": true,
+        "toolsIntegration": true,
+        "dynamicInterfaces": true,
+        "neurodivergentOptimized": true,
+        "enterpriseAccessible": true
+      },
+      "codeExample": "<ScoutUI4\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n  theme=\"system\"\n/>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Enhanced spacing and visual clarity", 
+        "theme": "'light' | 'dark' | 'system' - Visual theme",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["project-management", "ai-tools", "development-workspace", "collaboration", "enterprise", "neurodivergent"]
+    },
+    {
+      "name": "MessageLoading",
+      "category": "ui",
+      "description": "Animated loading indicator for chat messages with accessibility-aware animations and neurodivergent-friendly design. Respects reduced motion preferences.",
+      "useCases": [
+        "Chat loading states",
+        "Message typing indicators", 
+        "AI response loading",
+        "Real-time communication interfaces",
+        "Accessible loading animations"
+      ],
+      "accessibility": {
+        "reducedMotion": true,
+        "screenReaderFriendly": true,
+        "neurodivergentOptimized": true,
+        "gentleAnimations": true
+      },
+      "codeExample": "<MessageLoading\n  size=\"md\"\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n/>",
+      "props": {
+        "size": "'sm' | 'md' | 'lg' - Loading indicator size",
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Enhanced visibility and larger size",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["loading", "animation", "chat", "accessibility", "neurodivergent", "reduced-motion"]
+    },
+    {
+      "name": "ScrollArea",
+      "category": "ui",
+      "description": "Enhanced scroll area component with neurodivergent-friendly scrollbars and smooth scrolling options. Improved accessibility and visual clarity.",
+      "useCases": [
+        "Custom scrollable content",
+        "Chat message containers",
+        "Long form content areas",
+        "Sidebar navigation",
+        "Accessible scroll interfaces"
+      ],
+      "accessibility": {
+        "enhancedScrollbars": true,
+        "smoothScrolling": true,
+        "neurodivergentOptimized": true,
+        "keyboardAccessible": true
+      },
+      "codeExample": "<ScrollArea\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n>\n  <div>Scrollable content</div>\n</ScrollArea>",
+      "props": {
+        "reducedMotion": "boolean - Disable smooth scrolling for accessibility",
+        "neurodivergentMode": "boolean - Wider scrollbars and enhanced visibility",
+        "className": "string - Additional CSS classes"
+      },
+      "keywords": ["scroll", "accessibility", "neurodivergent", "enhanced-ui", "smooth-scrolling"]
+    },
+    {
+      "name": "Sheet",
+      "category": "ui",
+      "description": "Accessible dialog/overlay component with neurodivergent-friendly animations and enhanced focus management. Supports reduced motion preferences.",
+      "useCases": [
+        "Modal dialogs",
+        "Side panels",
+        "Overlay interfaces",
+        "Settings panels",
+        "Accessible popup content"
+      ],
+      "accessibility": {
+        "focusManagement": true,
+        "reducedMotion": true,
+        "neurodivergentOptimized": true,
+        "enhancedCloseButton": true
+      },
+      "codeExample": "<Sheet>\n  <SheetTrigger>Open</SheetTrigger>\n  <SheetContent\n    reducedMotion={userPreferences.reducedMotion}\n    neurodivergentMode={userPreferences.neurodivergent}\n  >\n    Content\n  </SheetContent>\n</Sheet>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Enhanced spacing and visibility",
+        "side": "'top' | 'bottom' | 'left' | 'right' - Sheet position"
+      },
+      "keywords": ["dialog", "overlay", "modal", "accessibility", "neurodivergent", "focus-management"]
+    },
+    {
+      "name": "Resizable",
+      "category": "ui",
+      "description": "Accessible resizable panels with neurodivergent-friendly handles and keyboard navigation support. Enhanced visual definition and interaction.",
+      "useCases": [
+        "Split-pane layouts",
+        "Resizable sidebars",
+        "Workspace layouts",
+        "Responsive interfaces",
+        "Accessible panel systems"
+      ],
+      "accessibility": {
+        "keyboardNavigation": true,
+        "enhancedHandles": true,
+        "neurodivergentOptimized": true,
+        "visualDefinition": true
+      },
+      "codeExample": "<ResizablePanelGroup\n  neurodivergentMode={userPreferences.neurodivergent}\n>\n  <ResizablePanel>Content 1</ResizablePanel>\n  <ResizableHandle withHandle />\n  <ResizablePanel>Content 2</ResizablePanel>\n</ResizablePanelGroup>",
+      "props": {
+        "neurodivergentMode": "boolean - Wider handles and better definition",
+        "withHandle": "boolean - Show visual handle grip",
+        "reducedMotion": "boolean - Disable animations for accessibility"
+      },
+      "keywords": ["resizable", "panels", "layout", "accessibility", "neurodivergent", "keyboard-navigation"]
+    },
+    {
+      "name": "ChatInput",
+      "category": "ui",
+      "description": "Enhanced chat input component with neurodivergent-friendly sizing and accessibility features. Optimized for communication interfaces.",
+      "useCases": [
+        "Chat applications",
+        "Message input fields",
+        "Communication interfaces",
+        "AI chat systems",
+        "Accessible text input"
+      ],
+      "accessibility": {
+        "enhancedSizing": true,
+        "betterTypography": true,
+        "neurodivergentOptimized": true,
+        "accessibleFocus": true
+      },
+      "codeExample": "<ChatInput\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n  placeholder=\"Type your message...\"\n/>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Larger input area and enhanced styling",
+        "theme": "'light' | 'dark' | 'system' - Visual theme"
+      },
+      "keywords": ["chat", "input", "communication", "accessibility", "neurodivergent", "enhanced-ui"]
+    },
+    {
+      "name": "ChatMessageList",
+      "category": "ui",
+      "description": "Accessible chat message container with auto-scroll functionality and neurodivergent-friendly navigation. Enhanced scroll-to-bottom features.",
+      "useCases": [
+        "Chat message display",
+        "Conversation interfaces",
+        "Message history views",
+        "AI chat systems",
+        "Accessible message lists"
+      ],
+      "accessibility": {
+        "autoScroll": true,
+        "scrollToBottom": true,
+        "neurodivergentOptimized": true,
+        "enhancedNavigation": true
+      },
+      "codeExample": "<ChatMessageList\n  reducedMotion={userPreferences.reducedMotion}\n  neurodivergentMode={userPreferences.neurodivergent}\n  smooth={!userPreferences.reducedMotion}\n>\n  {messages.map(message => <Message key={message.id} {...message} />)}\n</ChatMessageList>",
+      "props": {
+        "reducedMotion": "boolean - Disable animations for accessibility",
+        "neurodivergentMode": "boolean - Enhanced spacing and larger buttons",
+        "smooth": "boolean - Enable smooth scrolling"
+      },
+      "keywords": ["chat", "messages", "auto-scroll", "accessibility", "neurodivergent", "conversation"]
+    },
+    {
+      "name": "DeepResearchInterface",
+      "category": "research",
+      "description": "Advanced research interface with multi-modal input, conversation history, and AI-powered insights. Designed for deep research workflows with neurodivergent-friendly organization.",
+      "useCases": [
+        "AI research conversations",
+        "Document analysis interfaces",
+        "Knowledge exploration tools",
+        "Research collaboration platforms",
+        "Academic research assistants"
+      ],
+      "accessibility": {
+        "multiModalInput": true,
+        "organizedHistory": true,
+        "cognitiveSupport": true,
+        "reducedMotion": true,
+        "focusManagement": true
+      },
+      "codeExample": "<DeepResearchInterface\n  onSendMessage={handleMessage}\n  history={conversationHistory}\n  theme=\"sanctuary\"\n/>",
+      "props": {
+        "onSendMessage": "function - Message handler",
+        "history": "array - Conversation history",
+        "theme": "string - Interface theme",
+        "multiModal": "boolean - Enable file/media uploads"
+      },
+      "keywords": ["research", "ai", "conversation", "analysis", "neurodivergent", "academic", "deep-work"]
+    },
+    {
+      "name": "LiveStudio",
+      "category": "collaboration",
+      "description": "Real-time collaboration studio with video, audio, screen sharing, and AI integration. Optimized for neurodivergent-friendly remote collaboration and accessible communication.",
+      "useCases": [
+        "Virtual collaboration sessions",
+        "AI-assisted meetings",
+        "Remote pair programming",
+        "Interactive workshops",
+        "Accessible video calls"
+      ],
+      "accessibility": {
+        "audioVisualControls": true,
+        "keyboardShortcuts": true,
+        "sensoryFriendly": true,
+        "focusManagement": true,
+        "reducedMotion": true
+      },
+      "codeExample": "<LiveStudio\n  roomId={roomId}\n  enableVideo={true}\n  enableAI={true}\n  theme=\"sanctuary\"\n/>",
+      "props": {
+        "roomId": "string - Collaboration room ID",
+        "enableVideo": "boolean - Enable video features",
+        "enableAI": "boolean - Enable AI assistance",
+        "theme": "string - Interface theme"
+      },
+      "keywords": ["collaboration", "video", "audio", "real-time", "ai", "neurodivergent", "accessible"]
+    },
+    {
+      "name": "MiniAppsEcosystem",
+      "category": "platform",
+      "description": "Embeddable mini-apps platform with resizable windows, app store, and accessibility features. Creates a neurodivergent-friendly workspace with customizable app arrangements.",
+      "useCases": [
+        "Embedded application platforms",
+        "Workspace customization systems",
+        "Mini-app marketplaces",
+        "Modular interface builders",
+        "Accessible app ecosystems"
+      ],
+      "accessibility": {
+        "resizableWindows": true,
+        "keyboardNavigation": true,
+        "focusManagement": true,
+        "customizableLayouts": true,
+        "neurodivergentOptimized": true
+      },
+      "codeExample": "<MiniAppsEcosystem\n  apps={availableApps}\n  layout=\"grid\"\n  allowResizing={true}\n/>",
+      "props": {
+        "apps": "array - Available mini-apps",
+        "layout": "'grid' | 'tabs' | 'windows' - Layout mode",
+        "allowResizing": "boolean - Enable window resizing",
+        "maxApps": "number - Maximum concurrent apps"
+      },
+      "keywords": ["mini-apps", "platform", "resizable", "ecosystem", "neurodivergent", "customizable", "workspace"]
+    },
+    {
+      "name": "Button",
+      "category": "form",
+      "description": "Accessible button component with multiple variants, sizes, and neurodivergent-friendly styling. Optimized for clarity and usability with focus management.",
+      "useCases": [
+        "Form submissions",
+        "Action triggers",
+        "Navigation elements",
+        "Interactive controls",
+        "Accessible interfaces"
+      ],
+      "accessibility": {
+        "keyboardFocusable": true,
+        "screenReaderFriendly": true,
+        "highContrast": true,
+        "clearLabeling": true
+      },
+      "codeExample": "<Button variant=\"primary\" size=\"md\">\n  Submit\n</Button>",
+      "props": {
+        "variant": "'primary' | 'secondary' | 'outline' | 'ghost' - Button style",
+        "size": "'sm' | 'md' | 'lg' - Button size",
+        "disabled": "boolean - Disabled state"
+      },
+      "keywords": ["button", "form", "interactive", "accessible", "primary", "secondary"]
+    },
+    {
+      "name": "Input",
+      "category": "form",
+      "description": "Accessible input component with validation states and neurodivergent-friendly design. Includes clear labeling, error handling, and focus management.",
+      "useCases": [
+        "Form inputs",
+        "Search fields",
+        "Data entry",
+        "User input collection",
+        "Accessible forms"
+      ],
+      "accessibility": {
+        "clearLabeling": true,
+        "errorStates": true,
+        "keyboardNavigable": true,
+        "screenReaderSupport": true
+      },
+      "codeExample": "<Input\n  placeholder=\"Enter text\"\n  label=\"Name\"\n  error={validation.error}\n/>",
+      "props": {
+        "placeholder": "string - Placeholder text",
+        "label": "string - Input label",
+        "error": "string - Error message",
+        "disabled": "boolean - Disabled state"
+      },
+      "keywords": ["input", "form", "text", "accessible", "validation", "neurodivergent"]
+    },
+    {
+      "name": "Card",
+      "category": "layout",
+      "description": "Flexible card component for content organization with neurodivergent-friendly spacing and visual hierarchy. Supports various content layouts and accessibility features.",
+      "useCases": [
+        "Content containers",
+        "Information displays",
+        "Feature showcases",
+        "Dashboard panels",
+        "Organized content layouts"
+      ],
+      "accessibility": {
+        "clearBoundaries": true,
+        "appropriateSpacing": true,
+        "screenReaderStructure": true,
+        "focusManagement": true
+      },
+      "codeExample": "<Card>\n  <CardHeader>\n    <CardTitle>Title</CardTitle>\n  </CardHeader>\n  <CardContent>\n    Content here\n  </CardContent>\n</Card>",
+      "props": {
+        "className": "string - Additional CSS classes",
+        "children": "ReactNode - Card content"
+      },
+      "keywords": ["card", "container", "layout", "content", "accessible", "organization"]
+    }
+  ],
+  "aiIntegration": {
+    "mem0Compatible": true,
+    "searchableByTags": true,
+    "contextAware": true,
+    "codeGeneration": true,
+    "recommendations": {
+      "calmingEffects": ["AuroraBackground", "GlowingEffect", "LivingSanctuaryBackground"],
+      "interactiveElements": ["BackgroundGradientAnimation", "SplashCursor", "GlowingEffect", "LivingSanctuaryBackground", "ExpandableChat", "AnimatedList"],
+      "accessibilityFirst": ["SanctuaryLayout", "GlowingEffect", "AuroraBackground", "ImmersiveLoader", "LivingSanctuaryBackground", "Button", "Input", "Card"],
+      "neurodivergentFriendly": ["SanctuaryLayout", "AuroraBackground", "GlowingEffect", "ImmersiveLoader", "LivingSanctuaryBackground", "ScoutUI", "ExpandableChat", "AnimatedList"],
+      "magicalExperiences": ["ImmersiveLoader", "LivingSanctuaryBackground", "AuroraBackground"],
+      "loadingStates": ["ImmersiveLoader"],
+      "characterAnimations": ["ImmersiveLoader"],
+      "immersiveBackgrounds": ["LivingSanctuaryBackground", "BackgroundGradientAnimation", "AuroraBackground"],
+      "chatInterfaces": ["ExpandableChat", "ChatBubble", "DeepResearchInterface", "LiveStudio"],
+      "workspaceComponents": ["ScoutUI", "MiniAppsEcosystem", "Card"],
+      "collaborationTools": ["LiveStudio", "ExpandableChat", "ChatBubble"],
+      "researchTools": ["DeepResearchInterface", "ScoutUI", "AnimatedList"],
+      "formComponents": ["Button", "Input", "Card"],
+      "platformComponents": ["MiniAppsEcosystem", "ScoutUI", "LiveStudio"]
+    }
+  },
+  "searchPatterns": [
+    {
+      "query": "calming background",
+      "recommendations": ["AuroraBackground", "BackgroundGradientAnimation", "LivingSanctuaryBackground"]
+    },
+    {
+      "query": "accessible navigation",
+      "recommendations": ["SanctuaryLayout", "ScoutUI"]
+    },
+    {
+      "query": "interactive effects",
+      "recommendations": ["GlowingEffect", "SplashCursor", "BackgroundGradientAnimation", "LivingSanctuaryBackground", "ExpandableChat"]
+    },
+    {
+      "query": "neurodivergent friendly",
+      "recommendations": ["SanctuaryLayout", "AuroraBackground", "GlowingEffect", "ImmersiveLoader", "LivingSanctuaryBackground", "ScoutUI", "ExpandableChat", "AnimatedList"]
+    },
+    {
+      "query": "sanctuary theme",
+      "recommendations": ["SanctuaryLayout", "AuroraBackground", "LivingSanctuaryBackground"]
+    },
+    {
+      "query": "loading animation",
+      "recommendations": ["ImmersiveLoader"]
+    },
+    {
+      "query": "mama bear",
+      "recommendations": ["ImmersiveLoader"]
+    },
+    {
+      "query": "magical experience",
+      "recommendations": ["ImmersiveLoader", "LivingSanctuaryBackground", "AuroraBackground"]
+    },
+    {
+      "query": "immersive background",
+      "recommendations": ["LivingSanctuaryBackground", "BackgroundGradientAnimation", "AuroraBackground"]
+    },
+    {
+      "query": "character animation",
+      "recommendations": ["ImmersiveLoader"]
+    },
+    {
+      "query": "chat interface",
+      "recommendations": ["ExpandableChat", "ChatBubble", "DeepResearchInterface"]
+    },
+    {
+      "query": "ai chat",
+      "recommendations": ["ExpandableChat", "ChatBubble", "DeepResearchInterface", "LiveStudio"]
+    },
+    {
+      "query": "workspace interface",
+      "recommendations": ["ScoutUI", "MiniAppsEcosystem"]
+    },
+    {
+      "query": "development workspace",
+      "recommendations": ["ScoutUI", "MiniAppsEcosystem", "DeepResearchInterface"]
+    },
+    {
+      "query": "collaboration tools",
+      "recommendations": ["LiveStudio", "ExpandableChat", "ChatBubble"]
+    },
+    {
+      "query": "video collaboration",
+      "recommendations": ["LiveStudio"]
+    },
+    {
+      "query": "research interface",
+      "recommendations": ["DeepResearchInterface", "ScoutUI", "AnimatedList"]
+    },
+    {
+      "query": "mini apps",
+      "recommendations": ["MiniAppsEcosystem"]
+    },
+    {
+      "query": "platform ecosystem",
+      "recommendations": ["MiniAppsEcosystem", "ScoutUI"]
+    },
+    {
+      "query": "form components",
+      "recommendations": ["Button", "Input", "Card"]
+    },
+    {
+      "query": "accessible forms",
+      "recommendations": ["Button", "Input", "Card"]
+    },
+    {
+      "query": "animated lists",
+      "recommendations": ["AnimatedList"]
+    },
+    {
+      "query": "progressive reveal",
+      "recommendations": ["AnimatedList"]
+    },
+    {
+      "query": "gentle animations",
+      "recommendations": ["AnimatedList", "AuroraBackground", "GlowingEffect"]
+    },
+    {
+      "query": "expandable chat",
+      "recommendations": ["ExpandableChat"]
+    },
+    {
+      "query": "floating chat",
+      "recommendations": ["ExpandableChat"]
+    }
+  ]
+}

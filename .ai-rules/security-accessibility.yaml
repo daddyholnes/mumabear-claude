@@ -1,0 +1,351 @@
+# 🔐 KiloCode Security & Accessibility Standards
+# Comprehensive guidelines for secure and inclusive development
+
+version: "1.0"
+scope: "security_accessibility_standards"
+
+## 🛡️ SECURITY PROTOCOLS
+
+### Input Validation and Sanitization
+
+input_security_standards:
+  user_input_validation:
+    frontend_validation:
+      - Client-side validation for UX (never trust alone)
+      - Input length limits and format validation
+      - Real-time feedback for user guidance
+      - Sanitize before displaying user content
+      
+    backend_validation:
+      - Server-side validation for all inputs (mandatory)
+      - Whitelist approach over blacklist
+      - Parameterized queries for database operations
+      - Input encoding and escaping
+      
+    file_upload_security:
+      - File type validation (MIME type + extension)
+      - File size limits and virus scanning
+      - Secure file storage outside web root
+      - Content-Type header validation
+      
+  injection_prevention:
+    sql_injection:
+      - Use parameterized queries exclusively
+      - Implement ORM with proper escaping
+      - Validate and sanitize all database inputs
+      - Use stored procedures when appropriate
+      
+    xss_prevention:
+      - Escape output in templates
+      - Use Content Security Policy (CSP)
+      - Validate and sanitize HTML content
+      - Implement proper CORS policies
+      
+    command_injection:
+      - Avoid system calls with user input
+      - Use safe APIs and libraries
+      - Validate and sanitize command parameters
+      - Implement proper input filtering
+
+### Authentication and Authorization
+
+auth_security_standards:
+  password_security:
+    requirements:
+      - Minimum 12 characters length
+      - Mix of uppercase, lowercase, numbers, symbols
+      - No common passwords or dictionary words
+      - Password strength meter implementation
+      
+    storage_and_handling:
+      - Use bcrypt, scrypt, or Argon2 for hashing
+      - Implement proper salt generation
+      - Never store passwords in plain text
+      - Secure password reset mechanisms
+      
+  session_management:
+    session_security:
+      - Generate cryptographically secure session IDs
+      - Implement session timeout and renewal
+      - Secure session storage (HttpOnly, Secure flags)
+      - Proper session invalidation on logout
+      
+    jwt_implementation:
+      - Use strong signing algorithms (RS256, ES256)
+      - Implement proper token expiration
+      - Secure token storage (not in localStorage)
+      - Token refresh mechanisms
+      
+  access_control:
+    authorization_patterns:
+      - Role-based access control (RBAC)
+      - Principle of least privilege
+      - Resource-level permissions
+      - API endpoint protection
+      
+    implementation_guidelines:
+      - Validate permissions on every request
+      - Implement proper error handling (no info leakage)
+      - Use middleware for consistent enforcement
+      - Audit and log access attempts
+
+### Data Protection and Privacy
+
+data_protection_standards:
+  encryption_requirements:
+    data_at_rest:
+      - Encrypt sensitive data in databases
+      - Use AES-256 or equivalent encryption
+      - Secure key management practices
+      - Regular key rotation policies
+      
+    data_in_transit:
+      - HTTPS/TLS 1.3 for all communications
+      - Certificate pinning for mobile apps
+      - Secure API communication protocols
+      - End-to-end encryption for sensitive data
+      
+  privacy_compliance:
+    gdpr_requirements:
+      - Data minimization principles
+      - User consent mechanisms
+      - Right to be forgotten implementation
+      - Data portability features
+      
+    data_handling:
+      - Clear privacy policies
+      - User data anonymization
+      - Secure data deletion procedures
+      - Third-party data sharing controls
+
+## ♿ ACCESSIBILITY STANDARDS
+
+### WCAG 2.1 AA Compliance
+
+accessibility_requirements:
+  perceivable_content:
+    text_alternatives:
+      - Alt text for all images
+      - Captions for video content
+      - Audio descriptions when needed
+      - Text alternatives for complex graphics
+      
+    color_and_contrast:
+      - 4.5:1 contrast ratio for normal text
+      - 3:1 contrast ratio for large text
+      - Color not sole means of conveying information
+      - High contrast mode support
+      
+    adaptable_content:
+      - Semantic HTML structure
+      - Proper heading hierarchy (h1-h6)
+      - Meaningful reading order
+      - Responsive design implementation
+      
+  operable_interface:
+    keyboard_accessibility:
+      - Full keyboard navigation support
+      - Visible focus indicators
+      - Logical tab order
+      - Keyboard shortcuts documentation
+      
+    timing_and_motion:
+      - No auto-playing media with sound
+      - User control over time limits
+      - Pause/stop controls for moving content
+      - Reduced motion preferences respect
+      
+    seizure_prevention:
+      - No content flashing more than 3 times per second
+      - Avoid patterns that trigger seizures
+      - User warnings for potentially problematic content
+      
+  understandable_content:
+    readable_text:
+      - Clear, simple language
+      - Consistent terminology usage
+      - Abbreviation explanations
+      - Reading level appropriate for audience
+      
+    predictable_functionality:
+      - Consistent navigation patterns
+      - Stable component layouts
+      - Clear form instructions
+      - Error prevention and correction
+      
+  robust_implementation:
+    compatibility:
+      - Valid HTML markup
+      - Proper ARIA implementation
+      - Screen reader compatibility
+      - Cross-browser accessibility testing
+
+### Inclusive Design Patterns
+
+inclusive_design_principles:
+  neurodivergent_considerations:
+    adhd_support:
+      - Reduce visual clutter and distractions
+      - Clear progress indicators
+      - Consistent layouts and patterns
+      - Gentle transitions and animations
+      
+    autism_support:
+      - Predictable navigation and functionality
+      - Customizable sensory settings
+      - Clear information hierarchy
+      - Minimal unexpected changes
+      
+    dyslexia_support:
+      - Dyslexia-friendly fonts (OpenDyslexic)
+      - Adjustable line spacing and margins
+      - Text-to-speech integration
+      - Reading aids and overlays
+      
+  motor_accessibility:
+    input_methods:
+      - Large touch targets (minimum 44px)
+      - Voice control compatibility
+      - Switch navigation support
+      - Eye-tracking interface support
+      
+    interaction_design:
+      - Generous click/tap areas
+      - Drag and drop alternatives
+      - Timeout extensions or elimination
+      - Error prevention and correction
+      
+  cognitive_accessibility:
+    information_processing:
+      - Clear, logical information structure
+      - Step-by-step processes
+      - Progress indicators and breadcrumbs
+      - Help and documentation integration
+      
+    memory_support:
+      - Auto-save functionality
+      - Form data persistence
+      - Clear completion indicators
+      - Undo/redo capabilities
+
+## 🔍 SECURITY TESTING AND VALIDATION
+
+### Automated Security Testing
+
+security_testing_framework:
+  static_analysis:
+    code_scanning:
+      - SAST tools integration (SonarQube, CodeQL)
+      - Dependency vulnerability scanning
+      - Secret detection in code
+      - License compliance checking
+      
+    configuration_analysis:
+      - Security configuration validation
+      - Infrastructure as Code scanning
+      - Container security analysis
+      - Cloud security posture management
+      
+  dynamic_testing:
+    penetration_testing:
+      - OWASP ZAP integration
+      - SQL injection testing
+      - XSS vulnerability scanning
+      - Authentication bypass testing
+      
+    runtime_protection:
+      - Web Application Firewall (WAF)
+      - Runtime Application Self-Protection (RASP)
+      - Intrusion detection systems
+      - Security monitoring and alerting
+
+### Accessibility Testing Framework
+
+accessibility_testing_approach:
+  automated_testing:
+    tools_integration:
+      - axe-core for comprehensive scanning
+      - pa11y for command-line testing
+      - Lighthouse accessibility audits
+      - WAVE browser extension validation
+      
+    ci_cd_integration:
+      - Automated accessibility tests in pipeline
+      - Accessibility regression prevention
+      - Performance impact monitoring
+      - Compliance reporting generation
+      
+  manual_testing:
+    user_testing:
+      - Screen reader testing (NVDA, JAWS, VoiceOver)
+      - Keyboard-only navigation testing
+      - Voice control testing
+      - Mobile accessibility testing
+      
+    expert_review:
+      - Accessibility expert audits
+      - Usability testing with disabled users
+      - Cognitive load assessment
+      - Inclusive design review
+
+## 📊 COMPLIANCE MONITORING
+
+### Security Metrics and KPIs
+
+security_monitoring:
+  vulnerability_management:
+    metrics:
+      - Time to detect vulnerabilities
+      - Time to patch critical issues
+      - Number of false positives
+      - Security test coverage percentage
+      
+    reporting:
+      - Regular security assessment reports
+      - Vulnerability trend analysis
+      - Compliance status dashboards
+      - Incident response metrics
+      
+  access_control_monitoring:
+    audit_logging:
+      - User authentication attempts
+      - Authorization failures
+      - Privilege escalation attempts
+      - Data access patterns
+      
+    anomaly_detection:
+      - Unusual access patterns
+      - Failed login attempt clustering
+      - Suspicious data export activities
+      - Privilege abuse detection
+
+### Accessibility Compliance Tracking
+
+accessibility_monitoring:
+  compliance_metrics:
+    wcag_compliance:
+      - Level A compliance percentage
+      - Level AA compliance percentage
+      - Level AAA compliance percentage
+      - Accessibility error trend analysis
+      
+    user_experience_metrics:
+      - Task completion rates by user type
+      - Accessibility feature usage statistics
+      - User satisfaction scores
+      - Support ticket analysis
+      
+  continuous_improvement:
+    feedback_integration:
+      - User accessibility feedback collection
+      - Assistive technology compatibility reports
+      - Usability testing insights
+      - Community accessibility contributions
+      
+    training_and_awareness:
+      - Developer accessibility training
+      - Design team inclusive design workshops
+      - Accessibility champion programs
+      - Regular compliance updates
+
+Remember: Security and accessibility are not optional features - they are fundamental requirements for ethical and responsible software development. Every line of code should consider both security implications and inclusive design principles.

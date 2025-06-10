@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@theme {
+  --color-*: initial;
+  
+  /* Dark Purple Theme with Blue & Silver Neo Edges */
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #7c3aed;
+  --color-primary-700: #6d28d9;
+  --color-primary-800: #5b21b6;
+  --color-primary-900: #4c1d95;
+  --color-primary-950: #2e1065;
+
+  /* Blue Accents */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Silver Accents */
+  --color-silver-50: #f8fafc;
+  --color-silver-100: #f1f5f9;
+  --color-silver-200: #e2e8f0;
+  --color-silver-300: #cbd5e1;
+  --color-silver-400: #94a3b8;
+  --color-silver-500: #64748b;
+  --color-silver-600: #475569;
+  --color-silver-700: #334155;
+  --color-silver-800: #1e293b;
+  --color-silver-900: #0f172a;
+
+  /* Dark Theme Base */
+  --color-background: #0f0a1a;
+  --color-foreground: #faf9fb;
+  --color-card: #1a1625;
+  --color-card-foreground: #faf9fb;
+  --color-popover: #1a1625;
+  --color-popover-foreground: #faf9fb;
+  --color-muted: #262033;
+  --color-muted-foreground: #a1a1aa;
+  --color-accent: #2d1b4e;
+  --color-accent-foreground: #faf9fb;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fafafa;
+  --color-border: #262033;
+  --color-input: #262033;
+  --color-ring: #8b5cf6;
+
+  /* Neo Edge Glow Effects */
+  --glow-primary: 0 0 20px var(--color-primary-500);
+  --glow-blue: 0 0 20px var(--color-blue-500);
+  --glow-silver: 0 0 20px var(--color-silver-400);
+  
+  /* Font families */
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  /* Animations */
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulseGlow 3s ease-in-out infinite;
+}
+
+/* Neo Edge Effects */
+.neo-edge {
+  position: relative;
+  border: 1px solid var(--color-primary-600);
+  background: linear-gradient(135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.05) 50%,
+    rgba(148, 163, 184, 0.1) 100%
+  );
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 0 20px -5px var(--color-primary-500),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.neo-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-500),
+    var(--color-blue-500),
+    var(--color-silver-400)
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: subtract;
+  pointer-events: none;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(26, 22, 37, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.1);
+}
+
+/* Aurora Background */
+.aurora {
+  background: linear-gradient(-45deg, 
+    #0f0a1a, #1a1625, #2d1b4e, #1e40af);
+  background-size: 400% 400%;
+  animation: aurora 15s ease infinite;
+}
+
+@keyframes aurora {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hover States */
+.hover-glow:hover {
+  box-shadow:
+    0 0 30px -5px var(--color-primary-500),
+    0 0 50px -10px var(--color-blue-500);
+  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Text Glow */
+.text-glow {
+  text-shadow: 0 0 10px var(--color-primary-500);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 20px -5px var(--color-primary-500); }
+  to { box-shadow: 0 0 40px -5px var(--color-primary-600); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px -5px var(--color-primary-500);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 60px -5px var(--color-primary-600);
+    transform: scale(1.02);
+  }
+}
+
+/* Cursor Effects - Removed for better performance and UX */
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    var(--color-primary-600),
+    var(--color-blue-600)
+  );
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    var(--color-primary-500),
+    var(--color-blue-500)
+  );
+}
+
+/* Focus States */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-primary-600);
+  color: var(--color-primary-50);
+}
+
+/* Root styles */
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Loading states */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Effect toggles */
+.effects-none * {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+.effects-reduced * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}

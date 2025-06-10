@@ -1,0 +1,300 @@
+# 🛠️ KiloCode Tool Usage Patterns
+# Optimized strategies for effective tool utilization
+
+version: "1.0"
+scope: "tool_optimization"
+
+## 🔧 TOOL SELECTION MATRIX
+
+### File Operations
+
+file_operation_strategies:
+  reading_files:
+    single_file_analysis:
+      tool: "read_file"
+      when: "Need complete file content for analysis"
+      best_practices:
+        - Read one file at a time (multiple reads disabled)
+        - Analyze line numbers for precise referencing
+        - Use for understanding existing code structure
+        
+    code_structure_overview:
+      tool: "list_code_definition_names"
+      when: "Need high-level understanding of codebase"
+      best_practices:
+        - Use for initial project exploration
+        - Identify key classes, functions, and modules
+        - Plan integration points and dependencies
+        
+    pattern_searching:
+      tool: "search_files"
+      when: "Looking for specific patterns or implementations"
+      best_practices:
+        - Craft precise regex patterns
+        - Use file_pattern to limit scope
+        - Analyze context around matches
+        
+    directory_exploration:
+      tool: "list_files"
+      when: "Understanding project structure"
+      best_practices:
+        - Use recursive=true for deep exploration
+        - Use recursive=false for focused directory listing
+        - Combine with environment_details for context
+
+  editing_files:
+    targeted_modifications:
+      tool: "apply_diff"
+      when: "Making precise changes to existing files"
+      best_practices:
+        - Use multiple SEARCH/REPLACE blocks in single call
+        - Include exact line numbers with :start_line:
+        - Match whitespace and indentation exactly
+        - Batch related changes together
+        
+    new_file_creation:
+      tool: "write_to_file"
+      when: "Creating new files or complete rewrites"
+      best_practices:
+        - Provide complete file content
+        - Calculate accurate line_count
+        - Create directory structure automatically
+        - Use for initial file creation only
+        
+    content_insertion:
+      tool: "insert_content"
+      when: "Adding new lines without modifying existing content"
+      best_practices:
+        - Use line 0 for appending to end
+        - Use specific line numbers for precise insertion
+        - Ideal for adding imports, functions, or config blocks
+        
+    text_replacement:
+      tool: "search_and_replace"
+      when: "Finding and replacing specific text patterns"
+      best_practices:
+        - Use for simple text substitutions
+        - Support regex patterns when needed
+        - Consider case sensitivity requirements
+        - Use line ranges for targeted replacements
+
+### System Operations
+
+system_operation_strategies:
+  command_execution:
+    development_commands:
+      tool: "execute_command"
+      common_patterns:
+        - Package installation (npm install, pip install)
+        - Build processes (npm run build, python setup.py)
+        - Testing (npm test, pytest, cargo test)
+        - Development servers (npm run dev, flask run)
+        
+    best_practices:
+      - Explain command purpose clearly
+      - Use relative paths when possible
+      - Consider working directory context
+      - Handle interactive commands appropriately
+      - Monitor long-running processes
+      
+  browser_automation:
+    web_testing_workflow:
+      tool: "browser_action"
+      sequence_pattern:
+        1. "Launch browser at specific URL"
+        2. "Interact with elements (click, type, hover)"
+        3. "Capture screenshots for verification"
+        4. "Close browser when complete"
+        
+    best_practices:
+      - Always start with launch action
+      - Always end with close action
+      - Use screenshots to verify state
+      - Target element centers for clicks
+      - Respect 900x600 resolution limits
+      - Wait for user confirmation between actions
+
+## 🎯 WORKFLOW OPTIMIZATION PATTERNS
+
+### Efficient Development Cycles
+
+development_cycle_optimization:
+  analysis_phase:
+    step_1: "Review environment_details for project context"
+    step_2: "Use list_files to understand structure"
+    step_3: "Use list_code_definition_names for code overview"
+    step_4: "Use search_files for specific pattern analysis"
+    step_5: "Use read_file for detailed code examination"
+    
+  implementation_phase:
+    step_1: "Plan changes based on analysis"
+    step_2: "Use apply_diff for targeted modifications"
+    step_3: "Use write_to_file for new file creation"
+    step_4: "Use insert_content for adding new functionality"
+    step_5: "Use execute_command for testing and validation"
+    
+  verification_phase:
+    step_1: "Execute tests to verify functionality"
+    step_2: "Use browser_action for UI verification"
+    step_3: "Check for regressions and side effects"
+    step_4: "Validate performance and accessibility"
+    step_5: "Document changes and usage"
+
+batch_operation_strategies:
+  multiple_file_changes:
+    approach: "Process files sequentially"
+    pattern: "One file per tool use, wait for confirmation"
+    optimization: "Batch changes within single file using apply_diff"
+    
+  related_modifications:
+    approach: "Group logically related changes"
+    pattern: "Complete one logical unit before moving to next"
+    optimization: "Use multiple SEARCH/REPLACE blocks in apply_diff"
+
+### Error Handling and Recovery
+
+error_handling_patterns:
+  tool_failure_recovery:
+    file_operation_errors:
+      - Verify file paths and permissions
+      - Check for syntax errors in diffs
+      - Validate line numbers and content matching
+      - Retry with corrected parameters
+      
+    command_execution_errors:
+      - Analyze error messages for root cause
+      - Check system requirements and dependencies
+      - Verify working directory and permissions
+      - Provide alternative approaches
+      
+    browser_automation_errors:
+      - Verify URL accessibility and loading
+      - Check element coordinates and visibility
+      - Ensure proper sequence of actions
+      - Handle timeout and network issues
+      
+  progressive_problem_solving:
+    step_1: "Identify specific error and context"
+    step_2: "Analyze potential causes systematically"
+    step_3: "Implement targeted fixes"
+    step_4: "Verify resolution and test thoroughly"
+    step_5: "Document solution for future reference"
+
+## 🔍 INFORMATION GATHERING STRATEGIES
+
+### Project Understanding
+
+project_analysis_workflow:
+  initial_exploration:
+    environment_details: "Review file structure and active processes"
+    list_files: "Understand directory organization"
+    package_files: "Analyze dependencies and configuration"
+    readme_files: "Read project documentation and setup instructions"
+    
+  code_architecture_analysis:
+    entry_points: "Identify main application files"
+    configuration: "Understand build and deployment setup"
+    dependencies: "Map external libraries and frameworks"
+    patterns: "Identify architectural patterns and conventions"
+    
+  integration_point_identification:
+    api_endpoints: "Map backend API structure"
+    component_hierarchy: "Understand frontend component organization"
+    data_flow: "Trace data movement through application"
+    state_management: "Identify state storage and update patterns"
+
+context_building_strategies:
+  incremental_understanding:
+    broad_to_specific: "Start with high-level overview, drill down"
+    related_files: "Follow imports and dependencies"
+    usage_patterns: "Search for how components are used"
+    test_files: "Examine tests for usage examples"
+    
+  pattern_recognition:
+    naming_conventions: "Identify project-specific naming patterns"
+    code_organization: "Understand file and folder structure logic"
+    architectural_patterns: "Recognize design patterns in use"
+    technology_stack: "Map technologies and their integration"
+
+## 🚀 PERFORMANCE OPTIMIZATION
+
+### Tool Usage Efficiency
+
+efficiency_optimization:
+  minimize_tool_calls:
+    batch_operations: "Combine multiple changes in single tool use"
+    strategic_reading: "Read files only when necessary"
+    targeted_searches: "Use specific patterns and file filters"
+    efficient_workflows: "Plan tool sequence for minimal redundancy"
+    
+  maximize_information_extraction:
+    comprehensive_analysis: "Extract maximum value from each tool use"
+    context_preservation: "Build understanding incrementally"
+    pattern_reuse: "Apply learned patterns to similar situations"
+    documentation_integration: "Use existing docs to reduce exploration"
+
+response_optimization:
+  clear_communication:
+    explain_tool_choice: "Justify why specific tools are selected"
+    describe_expected_outcome: "Set expectations for tool results"
+    provide_context: "Explain how tool use fits into overall plan"
+    anticipate_issues: "Mention potential problems and solutions"
+    
+  efficient_iteration:
+    wait_for_confirmation: "Always wait for tool result before proceeding"
+    adapt_based_on_results: "Modify approach based on tool outcomes"
+    learn_from_failures: "Use errors to improve subsequent attempts"
+    optimize_future_usage: "Apply lessons learned to similar situations"
+
+## 🎨 MODE-SPECIFIC TOOL USAGE
+
+### Code Mode Optimization
+
+code_mode_patterns:
+  file_editing_focus:
+    primary_tools: "apply_diff, write_to_file, insert_content"
+    analysis_tools: "read_file, search_files, list_code_definition_names"
+    testing_tools: "execute_command, browser_action"
+    
+  development_workflow:
+    understand_first: "Analyze before making changes"
+    implement_incrementally: "Make small, focused changes"
+    test_frequently: "Verify changes work as expected"
+    document_changes: "Explain modifications and reasoning"
+
+debug_mode_patterns:
+  diagnostic_focus:
+    primary_tools: "search_files, read_file, execute_command"
+    analysis_approach: "Systematic problem identification"
+    testing_strategy: "Reproduce issues and verify fixes"
+    
+  problem_solving_workflow:
+    reproduce_issue: "Understand and replicate the problem"
+    analyze_systematically: "Use tools to gather diagnostic information"
+    implement_fixes: "Apply targeted solutions"
+    verify_resolution: "Test thoroughly to ensure fix works"
+
+## 📊 TOOL USAGE METRICS
+
+### Success Indicators
+
+effectiveness_measures:
+  tool_selection_accuracy:
+    - Choose appropriate tool for each task
+    - Minimize unnecessary tool usage
+    - Maximize information extraction per tool use
+    - Adapt tool usage based on results
+    
+  workflow_efficiency:
+    - Complete tasks with minimal tool calls
+    - Batch related operations effectively
+    - Avoid redundant information gathering
+    - Optimize tool sequence for best results
+    
+  error_reduction:
+    - Minimize tool usage errors
+    - Learn from failed attempts
+    - Improve parameter accuracy over time
+    - Develop robust error recovery strategies
+
+Remember: Tools are means to an end. The goal is always to solve the user's problem efficiently and effectively while maintaining high code quality and clear communication.

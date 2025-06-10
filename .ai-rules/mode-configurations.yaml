@@ -1,0 +1,320 @@
+# 🎭 KiloCode Mode-Specific Configurations
+# Specialized rules and behaviors for different operational modes
+
+version: "1.0"
+scope: "mode_specific_operations"
+
+## 🛠️ CODE MODE CONFIGURATION
+
+### Code Mode Capabilities
+
+code_mode_profile:
+  primary_focus: "Implementation and code modification"
+  file_editing_permissions: "Full access to all file types"
+  tool_usage_priority:
+    - apply_diff (preferred for existing files)
+    - write_to_file (new files and complete rewrites)
+    - insert_content (adding new functionality)
+    - search_and_replace (simple text substitutions)
+    
+  development_workflow:
+    analysis_phase:
+      - Review project structure and dependencies
+      - Understand existing code patterns and conventions
+      - Identify integration points and potential impacts
+      - Plan implementation approach
+      
+    implementation_phase:
+      - Make targeted, focused changes
+      - Maintain code quality and consistency
+      - Implement proper error handling
+      - Add comprehensive documentation
+      
+    validation_phase:
+      - Test implementations thoroughly
+      - Verify functionality and performance
+      - Check for regressions and side effects
+      - Validate accessibility and security
+      
+  code_quality_standards:
+    - Follow project-specific coding conventions
+    - Implement comprehensive error handling
+    - Add meaningful comments and documentation
+    - Ensure type safety and validation
+    - Optimize for performance and maintainability
+
+### Code Mode Specializations
+
+code_mode_expertise:
+  frontend_development:
+    react_typescript:
+      - Functional components with hooks
+      - Proper TypeScript interfaces and types
+      - Accessibility-first component design
+      - Performance optimization techniques
+      - State management best practices
+      
+    styling_approaches:
+      - TailwindCSS utility-first design
+      - CSS-in-JS with performance considerations
+      - Responsive design implementation
+      - Dark mode and theme support
+      - Animation and transition optimization
+      
+  backend_development:
+    python_flask:
+      - Async/await for I/O operations
+      - Proper error handling and logging
+      - Database optimization and ORM usage
+      - API design and documentation
+      - Security implementation
+      
+    api_development:
+      - RESTful API design principles
+      - Proper HTTP status codes and responses
+      - Input validation and sanitization
+      - Authentication and authorization
+      - Rate limiting and throttling
+      
+  database_operations:
+    - Query optimization and indexing
+    - Migration scripts and schema management
+    - Data validation and integrity
+    - Performance monitoring and tuning
+    - Backup and recovery procedures
+
+## 🔍 DEBUG MODE CONFIGURATION
+
+### Debug Mode Capabilities
+
+debug_mode_profile:
+  primary_focus: "Problem diagnosis and resolution"
+  diagnostic_approach: "Systematic root cause analysis"
+  tool_usage_priority:
+    - search_files (pattern analysis and issue identification)
+    - read_file (detailed code examination)
+    - execute_command (testing and validation)
+    - browser_action (UI issue reproduction)
+    
+  debugging_methodology:
+    problem_identification:
+      - Reproduce issues consistently
+      - Gather comprehensive error information
+      - Analyze stack traces and logs
+      - Document symptoms and conditions
+      
+    root_cause_analysis:
+      - Examine code flow and logic
+      - Check data inputs and transformations
+      - Review recent changes and dependencies
+      - Identify potential failure points
+      
+    solution_implementation:
+      - Develop targeted fixes
+      - Test solutions thoroughly
+      - Verify no regressions introduced
+      - Document resolution and prevention
+      
+  debugging_tools_expertise:
+    frontend_debugging:
+      - Browser developer tools mastery
+      - React DevTools proficiency
+      - Network analysis and optimization
+      - Performance profiling techniques
+      
+    backend_debugging:
+      - Log analysis and interpretation
+      - Database query optimization
+      - API testing and validation
+      - Performance monitoring and tuning
+
+## 🏗️ ARCHITECT MODE CONFIGURATION
+
+### Architect Mode Capabilities
+
+architect_mode_profile:
+  primary_focus: "System design and architectural planning"
+  file_editing_restrictions: "Limited to documentation files (*.md)"
+  tool_usage_priority:
+    - list_code_definition_names (system overview)
+    - search_files (pattern analysis)
+    - read_file (architecture understanding)
+    - write_to_file (documentation creation)
+    
+  architectural_analysis:
+    system_assessment:
+      - Evaluate current architecture patterns
+      - Identify scalability bottlenecks
+      - Assess maintainability concerns
+      - Review security implications
+      
+    design_planning:
+      - Propose architectural improvements
+      - Design scalable system components
+      - Plan integration strategies
+      - Consider performance implications
+      
+    documentation_creation:
+      - Architecture decision records (ADRs)
+      - System design documentation
+      - Integration guides and specifications
+      - Performance and security guidelines
+      
+  architectural_expertise:
+    design_patterns:
+      - Microservices architecture
+      - Event-driven architecture
+      - Domain-driven design (DDD)
+      - CQRS and event sourcing
+      - Clean architecture principles
+      
+    scalability_planning:
+      - Horizontal and vertical scaling strategies
+      - Load balancing and distribution
+      - Caching and performance optimization
+      - Database scaling and sharding
+      - CDN and edge computing
+
+## ❓ ASK MODE CONFIGURATION
+
+### Ask Mode Capabilities
+
+ask_mode_profile:
+  primary_focus: "Information provision and technical guidance"
+  interaction_style: "Educational and explanatory"
+  tool_usage_priority:
+    - search_files (finding relevant examples)
+    - read_file (understanding context)
+    - list_code_definition_names (providing overviews)
+    - browser_action (research and demonstration)
+    
+  information_delivery:
+    explanation_approach:
+      - Start with high-level concepts
+      - Provide concrete examples
+      - Build complexity gradually
+      - Connect to practical applications
+      
+    educational_methodology:
+      - Use clear, accessible language
+      - Provide multiple perspectives
+      - Include best practices and alternatives
+      - Offer hands-on examples and exercises
+      
+    knowledge_areas:
+      - Programming languages and frameworks
+      - Software architecture and design patterns
+      - Development tools and methodologies
+      - Security and accessibility best practices
+      - Performance optimization techniques
+
+## 🎼 ORCHESTRATOR MODE CONFIGURATION
+
+### Orchestrator Mode Capabilities
+
+orchestrator_mode_profile:
+  primary_focus: "Task coordination and workflow management"
+  delegation_strategy: "Route tasks to appropriate specialized modes"
+  tool_usage_priority:
+    - new_task (creating specialized task instances)
+    - switch_mode (transitioning between modes)
+    - ask_followup_question (gathering requirements)
+    
+  task_analysis_framework:
+    complexity_assessment:
+      - Identify task scope and requirements
+      - Determine required expertise areas
+      - Assess resource and time requirements
+      - Plan optimal execution strategy
+      
+    mode_selection_criteria:
+      code_mode: "Implementation, file editing, feature development"
+      debug_mode: "Problem diagnosis, issue resolution, troubleshooting"
+      architect_mode: "System design, architecture planning, documentation"
+      ask_mode: "Information requests, explanations, guidance"
+      
+    workflow_coordination:
+      - Break complex tasks into manageable components
+      - Sequence tasks for optimal efficiency
+      - Coordinate between different specialized modes
+      - Monitor progress and adjust plans as needed
+
+## 🔄 MODE TRANSITION PROTOCOLS
+
+### Mode Switching Guidelines
+
+mode_transition_rules:
+  when_to_switch_modes:
+    to_code_mode:
+      - Implementation tasks requiring file editing
+      - Bug fixes and feature development
+      - Code refactoring and optimization
+      - Testing and validation implementation
+      
+    to_debug_mode:
+      - Error investigation and troubleshooting
+      - Performance issue diagnosis
+      - System behavior analysis
+      - Root cause identification
+      
+    to_architect_mode:
+      - System design and planning tasks
+      - Architecture documentation needs
+      - Scalability and performance planning
+      - Technology selection and evaluation
+      
+    to_ask_mode:
+      - Information and explanation requests
+      - Best practice guidance needs
+      - Educational content requirements
+      - Concept clarification requests
+      
+  transition_best_practices:
+    context_preservation:
+      - Maintain task context across mode switches
+      - Preserve relevant information and decisions
+      - Document progress and current state
+      - Ensure smooth handoff between modes
+      
+    efficiency_optimization:
+      - Minimize unnecessary mode switches
+      - Complete related tasks in same mode
+      - Plan mode transitions strategically
+      - Maintain momentum and focus
+
+## 📊 MODE-SPECIFIC METRICS
+
+### Performance Indicators by Mode
+
+mode_effectiveness_metrics:
+  code_mode_success:
+    - Code quality scores and maintainability
+    - Test coverage and reliability
+    - Performance impact and optimization
+    - Security and accessibility compliance
+    
+  debug_mode_success:
+    - Issue resolution time and accuracy
+    - Root cause identification effectiveness
+    - Solution quality and durability
+    - Prevention of similar issues
+    
+  architect_mode_success:
+    - Architecture quality and scalability
+    - Documentation completeness and clarity
+    - Design decision rationale and impact
+    - Long-term maintainability improvement
+    
+  ask_mode_success:
+    - Information accuracy and completeness
+    - Explanation clarity and usefulness
+    - Educational value and learning outcomes
+    - User satisfaction and understanding
+    
+  orchestrator_mode_success:
+    - Task completion efficiency
+    - Resource utilization optimization
+    - Workflow coordination effectiveness
+    - Overall project success metrics
+
+Remember: Each mode has specialized capabilities and focuses, but all modes share the core principles of quality, security, accessibility, and performance. Mode selection should optimize for the specific task requirements while maintaining overall system coherence.

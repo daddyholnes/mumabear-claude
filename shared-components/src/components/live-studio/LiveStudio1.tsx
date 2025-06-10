@@ -1,0 +1,753 @@
+"use client"
+
+import React, { useState, useRef, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Mic, 
+  MicOff, 
+  Video, 
+  VideoOff, 
+  Monitor, 
+  Upload, 
+  Smile, 
+  Send, 
+  Copy, 
+  Settings, 
+  ChevronRight, 
+  ChevronLeft,
+  MessageSquare,
+  Palette,
+  Search,
+  Database,
+  Zap,
+  Paperclip,
+  Image as ImageIcon,
+  Phone,
+  PhoneOff,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Cloud,
+  Moon,
+  Sun
+} from 'lucide-react'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Switch } from '../ui/switch'
+import { Separator } from '../ui/separator'
+import { Badge } from '../ui/badge'
+import { Slider } from '../ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { ScrollArea } from '../ui/scroll-area'
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet'
+
+interface Message {
+  id: string
+  content: string
+  sender: 'user' | 'model'
+  timestamp: Date
+  type: 'text' | 'image' | 'file'
+}
+
+interface ChatHistory {
+  id: string
+  title: string
+  lastMessage: string
+  timestamp: Date
+}
+
+interface LiveBubble {
+  id: string
+  content: string
+  x: number
+  y: number
+  opacity: number
+}
+
+const EmojiPicker = ({ onEmojiSelect }: { onEmojiSelect: (emoji: string) => void }) => {
+  const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🔥', '💯', '🎉', '🚀', '⭐', '💡', '🎯', '🌟', '✨']
+  
+  return (
+    <div className="grid grid-cols-4 gap-2 p-2 bg-background border border-border rounded-lg shadow-lg">
+      {emojis.map((emoji, index) => (
+        <button
+          key={index}
+          onClick={() => onEmojiSelect(emoji)}
+          className="p-2 hover:bg-accent rounded text-lg transition-colors"
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const ThemeSelector = ({ currentTheme, onThemeChange }: { currentTheme: string, onThemeChange: (theme: string) => void }) => {
+  const themes = [
+    { id: 'purple-haze', name: 'Purple Haze', gradient: 'from-purple-600 via-pink-600 to-blue-600' },
+    { id: 'midnight-sky', name: 'Midnight Sky', gradient: 'from-slate-900 via-purple-900 to-slate-900' },
+    { id: 'daytime-clouds', name: 'Daytime Clouds', gradient: 'from-blue-400 via-white to-blue-300' }
+  ]
+
+  return (
+    <div className="space-y-2">
+      {themes.map((theme) => (
+        <button
+          key={theme.id}
+          onClick={() => onThemeChange(theme.id)}
+          className={`w-full p-3 rounded-lg border-2 transition-all ${
+            currentTheme === theme.id ? 'border-primary' : 'border-border'
+          }`}
+        >
+          <div className={`h-8 w-full rounded bg-gradient-to-r ${theme.gradient} mb-2`} />
+          <span className="text-sm font-medium">{theme.name}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const AnimatedBackground = ({ theme }: { theme: string }) => {
+  const getBackgroundClass = () => {
+    switch (theme) {
+      case 'purple-haze':
+        return 'bg-gradient-to-br from-purple-600/20 via-pink-600/20 to-blue-600/20'
+      case 'midnight-sky':
+        return 'bg-gradient-to-br from-slate-900/40 via-purple-900/40 to-slate-900/40'
+      case 'daytime-clouds':
+        return 'bg-gradient-to-br from-blue-400/20 via-white/20 to-blue-300/20'
+      default:
+        return 'bg-background'
+    }
+  }
+
+  return (
+    <div className={`fixed inset-0 ${getBackgroundClass()} pointer-events-none`}>
+      {theme === 'midnight-sky' && (
+        <div className="absolute inset-0">
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 2 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const ModelThinkingAnimation = () => (
+  <motion.div className="flex space-x-1 p-4">
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        className="w-2 h-2 bg-primary rounded-full"
+        animate={{
+          y: [-4, 4, -4],
+          opacity: [0.5, 1, 0.5],
+        }}
+        transition={{
+          duration: 1,
+          repeat: Infinity,
+          delay: i * 0.2,
+        }}
+      />
+    ))}
+  </motion.div>
+)
+
+const LiveChatBubble = ({ bubble, onComplete }: { bubble: LiveBubble, onComplete: () => void }) => (
+  <motion.div
+    className="absolute bg-primary/20 text-primary-foreground px-3 py-1 rounded-full text-sm backdrop-blur-sm"
+    style={{ left: bubble.x, top: bubble.y }}
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ opacity: bubble.opacity, scale: 1 }}
+    exit={{ opacity: 0, scale: 0 }}
+    transition={{ duration: 0.5 }}
+    onAnimationComplete={onComplete}
+  >
+    {bubble.content}
+  </motion.div>
+)
+
+interface LiveStudio1Props {
+  reducedMotion?: boolean
+  neurodivergentMode?: boolean
+  theme?: 'light' | 'dark' | 'system'
+  className?: string
+}
+
+const GeminiLiveStudio: React.FC<LiveStudio1Props> = ({ 
+  reducedMotion = false, 
+  neurodivergentMode = false, 
+  theme = 'system',
+  className = ''
+}) => {
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [inputValue, setInputValue] = useState('')
+  const [isRecording, setIsRecording] = useState(false)
+  const [isVideoOn, setIsVideoOn] = useState(false)
+  const [isScreenSharing, setIsScreenSharing] = useState(false)
+  const [isLiveMode, setIsLiveMode] = useState(false)
+  const [isModelThinking, setIsModelThinking] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('gemini-2.0-flash-exp')
+  const [selectedVoice, setSelectedVoice] = useState('aoede')
+  const [temperature, setTemperature] = useState([0.7])
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState('purple-haze')
+  const [liveBubbles, setLiveBubbles] = useState<LiveBubble[]>([])
+  const [chatHistory] = useState<ChatHistory[]>([
+    { id: '1', title: 'AI Assistant Chat', lastMessage: 'How can I help you today?', timestamp: new Date() },
+    { id: '2', title: 'Code Review', lastMessage: 'The implementation looks good', timestamp: new Date() },
+    { id: '3', title: 'Creative Writing', lastMessage: 'Let me help with that story', timestamp: new Date() },
+    { id: '4', title: 'Data Analysis', lastMessage: 'Here are the insights', timestamp: new Date() },
+    { id: '5', title: 'Learning Session', lastMessage: 'Great progress today!', timestamp: new Date() },
+  ])
+
+  // Motion configuration for accessibility
+  const motionConfig = {
+    initial: reducedMotion ? {} : { opacity: 0, y: 20 },
+    animate: reducedMotion ? {} : { opacity: 1, y: 0 },
+    exit: reducedMotion ? {} : { opacity: 0, y: -20 },
+    transition: reducedMotion ? { duration: 0 } : { duration: 0.3 }
+  }
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const chatAreaRef = useRef<HTMLDivElement>(null)
+
+  const models = [
+    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
+  ]
+
+  const voices = [
+    { id: 'aoede', name: 'Aoede' },
+    { id: 'charon', name: 'Charon' },
+    { id: 'fenrir', name: 'Fenrir' },
+    { id: 'kore', name: 'Kore' }
+  ]
+
+  const addLiveBubble = useCallback((content: string) => {
+    const bubble: LiveBubble = {
+      id: Math.random().toString(36).substr(2, 9),
+      content,
+      x: Math.random() * 300,
+      y: Math.random() * 200,
+      opacity: 1
+    }
+    setLiveBubbles(prev => [...prev, bubble])
+    
+    setTimeout(() => {
+      setLiveBubbles(prev => prev.filter(b => b.id !== bubble.id))
+    }, 3000)
+  }, [])
+
+  const handleSendMessage = useCallback(() => {
+    if (!inputValue.trim()) return
+
+    const newMessage: Message = {
+      id: Math.random().toString(36).substr(2, 9),
+      content: inputValue,
+      sender: 'user',
+      timestamp: new Date(),
+      type: 'text'
+    }
+
+    setMessages(prev => [...prev, newMessage])
+    setInputValue('')
+    setIsModelThinking(true)
+
+    if (isLiveMode) {
+      addLiveBubble(inputValue)
+    }
+
+    setTimeout(() => {
+      const modelResponse: Message = {
+        id: Math.random().toString(36).substr(2, 9),
+        content: "I understand your request. Let me help you with that. This is a simulated response from the Gemini model.",
+        sender: 'model',
+        timestamp: new Date(),
+        type: 'text'
+      }
+      setMessages(prev => [...prev, modelResponse])
+      setIsModelThinking(false)
+
+      if (isLiveMode) {
+        addLiveBubble("AI Response")
+      }
+    }, 2000)
+  }, [inputValue, isLiveMode, addLiveBubble])
+
+  const handleFileUpload = useCallback((files: FileList | null) => {
+    if (!files) return
+
+    Array.from(files).forEach(file => {
+      const newMessage: Message = {
+        id: Math.random().toString(36).substr(2, 9),
+        content: `Uploaded: ${file.name}`,
+        sender: 'user',
+        timestamp: new Date(),
+        type: 'file'
+      }
+      setMessages(prev => [...prev, newMessage])
+    })
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    handleFileUpload(e.dataTransfer.files)
+  }, [handleFileUpload])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile()
+        if (blob) {
+          const newMessage: Message = {
+            id: Math.random().toString(36).substr(2, 9),
+            content: 'Pasted image',
+            sender: 'user',
+            timestamp: new Date(),
+            type: 'image'
+          }
+          setMessages(prev => [...prev, newMessage])
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight
+    }
+  }, [messages])
+
+  return (
+    <TooltipProvider>
+      <div className="h-screen flex bg-background text-foreground relative overflow-hidden">
+        <AnimatedBackground theme={currentTheme} />
+        
+        {/* Left Sidebar - Chat History */}
+        <div className="w-64 bg-card border-r border-border flex flex-col relative z-10">
+          <div className="p-4 border-b border-border">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Recent Chats
+            </h2>
+          </div>
+          <ScrollArea className="flex-1 p-2">
+            {chatHistory.map((chat) => (
+              <Card key={chat.id} className="p-3 mb-2 cursor-pointer hover:bg-accent transition-colors">
+                <h3 className="font-medium text-sm truncate">{chat.title}</h3>
+                <p className="text-xs text-muted-foreground truncate mt-1">{chat.lastMessage}</p>
+                <span className="text-xs text-muted-foreground">
+                  {chat.timestamp.toLocaleDateString()}
+                </span>
+              </Card>
+            ))}
+          </ScrollArea>
+          
+          {/* Theme Selector */}
+          <div className="p-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className="w-4 h-4" />
+              <span className="text-sm font-medium">Themes</span>
+            </div>
+            <ThemeSelector currentTheme={currentTheme} onThemeChange={setCurrentTheme} />
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col relative">
+          {/* Header */}
+          <div className="h-16 bg-card border-b border-border flex items-center justify-between px-6 relative z-10">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Gemini Live Studio
+              </h1>
+              <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+                {selectedModel}
+              </Badge>
+            </div>
+            
+            {/* Media Controls */}
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={isLiveMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsLiveMode(!isLiveMode)}
+                    className="relative overflow-hidden"
+                  >
+                    {isLiveMode ? <Phone className="w-4 h-4" /> : <PhoneOff className="w-4 h-4" />}
+                    {isLiveMode && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20"
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Live Mode</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={isRecording ? "destructive" : "outline"}
+                    size="sm"
+                    onClick={() => setIsRecording(!isRecording)}
+                    className="relative overflow-hidden"
+                  >
+                    {isRecording ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                    {isRecording && (
+                      <motion.div
+                        className="absolute inset-0 bg-red-500/20"
+                        animate={{ opacity: [0.3, 0.7, 0.3] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Microphone</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={isVideoOn ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsVideoOn(!isVideoOn)}
+                  >
+                    {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Video</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={isScreenSharing ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIsScreenSharing(!isScreenSharing)}
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Screen Share</TooltipContent>
+              </Tooltip>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                {sidebarOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <div 
+            ref={chatAreaRef}
+            className="flex-1 overflow-y-auto p-6 space-y-4 relative"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+          >
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  {...motionConfig}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <Card className={`max-w-[70%] p-4 relative overflow-hidden ${
+                    message.sender === 'user' 
+                      ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30' 
+                      : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30'
+                  }`}>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
+                      animate={{ x: [-100, 100] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    />
+                    <p className="relative z-10">{message.content}</p>
+                    <div className="flex items-center justify-between mt-2 relative z-10">
+                      <span className="text-xs text-muted-foreground">
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {isModelThinking && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-start"
+              >
+                <Card className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30">
+                  <ModelThinkingAnimation />
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Live Chat Bubbles */}
+            <AnimatePresence>
+              {liveBubbles.map((bubble) => (
+                <LiveChatBubble
+                  key={bubble.id}
+                  bubble={bubble}
+                  onComplete={() => setLiveBubbles(prev => prev.filter(b => b.id !== bubble.id))}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Input Area */}
+          <div className="p-6 bg-card border-t border-border relative z-10">
+            <div className="flex items-end gap-3">
+              <div className="flex-1 relative">
+                <Textarea
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onPaste={handlePaste}
+                  placeholder="Type your message..."
+                  className="min-h-[60px] pr-20 resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                />
+                <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Attach File</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Smile className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Emoji</TooltipContent>
+                  </Tooltip>
+                </div>
+
+                {showEmojiPicker && (
+                  <div className="absolute bottom-full right-0 mb-2">
+                    <EmojiPicker
+                      onEmojiSelect={(emoji) => {
+                        setInputValue(prev => prev + emoji)
+                        setShowEmojiPicker(false)
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputValue.trim()}
+                className="h-[60px] px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 relative overflow-hidden"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                  animate={{ x: [-100, 100] }}
+                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                />
+                <Send className="w-5 h-5 relative z-10" />
+              </Button>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              className="bg-card border-l border-border relative z-10"
+            >
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Settings className="w-4 h-4" />
+                      Model Settings
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Model</label>
+                        <Select value={selectedModel} onValueChange={setSelectedModel}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {models.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                {model.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Voice</label>
+                        <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {voices.map((voice) => (
+                              <SelectItem key={voice.id} value={voice.id}>
+                                {voice.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Temperature: {temperature[0]}
+                        </label>
+                        <Slider
+                          value={temperature}
+                          onValueChange={setTemperature}
+                          max={2}
+                          min={0}
+                          step={0.1}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      Features
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Function Calling
+                        </span>
+                        <Switch />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm flex items-center gap-2">
+                          <Search className="w-4 h-4" />
+                          Web Search
+                        </span>
+                        <Switch />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm flex items-center gap-2">
+                          <Database className="w-4 h-4" />
+                          RAG
+                        </span>
+                        <Switch />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-semibold mb-3">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-xs">Upload</span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1">
+                        <ImageIcon className="w-4 h-4" />
+                        <span className="text-xs">Image</span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1">
+                        <Sparkles className="w-4 h-4" />
+                        <span className="text-xs">Magic</span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1">
+                        <Volume2 className="w-4 h-4" />
+                        <span className="text-xs">Audio</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </TooltipProvider>
+  )
+}
+
+export default GeminiLiveStudio
+export type { LiveStudio1Props }

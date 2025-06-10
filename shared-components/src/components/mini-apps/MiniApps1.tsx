@@ -1,0 +1,617 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Card } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '../ui/resizable';
+import { Star, Search, ExternalLink, Palette, Moon, Sun, Cloud, X, Maximize2, Minimize2 } from 'lucide-react';
+
+interface MiniApp {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  icon: string;
+  category: string;
+  rating: number;
+  logoPath: string;
+  featured?: boolean;
+}
+
+interface ResizableWindowProps {
+  id: string;
+  title: string;
+  url: string;
+  onClose: (id: string) => void;
+  onMaximizeToggle: (id: string) => void;
+  isMaximized: boolean;
+  initialPosition?: { x: number; y: number };
+  initialSize?: { width: number; height: number };
+}
+
+const ResizableWindow: React.FC<ResizableWindowProps> = ({
+  id,
+  title,
+  url,
+  onClose,
+  onMaximizeToggle,
+  isMaximized,
+  initialPosition = { x: 50, y: 50 },
+  initialSize = { width: 800, height: 600 }
+}) => {
+  const [position, setPosition] = useState(initialPosition);
+  const [size, setSize] = useState(initialSize);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const windowRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isMaximized) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('.resize-handle') || target.closest('button')) {
+      return;
+    }
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  }, [position, isMaximized]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || isMaximized) return;
+    setPosition({
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y,
+    });
+  }, [isDragging, dragOffset, isMaximized]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const handleResize = useCallback((e: React.MouseEvent, direction: string) => {
+    if (isMaximized) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = size.width;
+    const startHeight = size.height;
+    const startLeft = position.x;
+    const startTop = position.y;
+
+    const doResize = (moveEvent: MouseEvent) => {
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newX = startLeft;
+      let newY = startTop;
+
+      if (direction.includes('right')) {
+        newWidth = Math.max(300, startWidth + (moveEvent.clientX - startX));
+      }
+      if (direction.includes('bottom')) {
+        newHeight = Math.max(200, startHeight + (moveEvent.clientY - startY));
+      }
+      if (direction.includes('left')) {
+        newWidth = Math.max(300, startWidth - (moveEvent.clientX - startX));
+        newX = startLeft + (moveEvent.clientX - startX);
+      }
+      if (direction.includes('top')) {
+        newHeight = Math.max(200, startHeight - (moveEvent.clientY - startY));
+        newY = startTop + (moveEvent.clientY - startY);
+      }
+
+      setSize({ width: newWidth, height: newHeight });
+      setPosition({ x: newX, y: newY });
+    };
+
+    const stopResize = () => {
+      document.removeEventListener('mousemove', doResize);
+      document.removeEventListener('mouseup', stopResize);
+    };
+
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+  }, [size, position, isMaximized]);
+
+  const windowStyle: React.CSSProperties = isMaximized
+    ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1000,
+        transition: 'all 0.3s ease-in-out',
+      }
+    : {
+        position: 'absolute',
+        left: position.x,
+        top: position.y,
+        width: size.width,
+        height: size.height,
+        minWidth: '300px',
+        minHeight: '200px',
+        zIndex: 999,
+        transition: 'none', // Disable transition for drag/resize
+    };
+
+  return (
+    <Card
+      ref={windowRef}
+      className="bg-card border-border shadow-lg flex flex-col rounded-lg overflow-hidden"
+      style={windowStyle}
+    >
+      <div
+        className="flex items-center justify-between p-2 bg-primary text-primary-foreground cursor-grab"
+        onMouseDown={handleMouseDown}
+      >
+        <span className="font-semibold text-sm truncate">{title}</span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-primary-foreground hover:bg-primary/80"
+            onClick={() => onMaximizeToggle(id)}
+          >
+            {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-primary-foreground hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => onClose(id)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <iframe
+          src={url}
+          title={title}
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"
+        />
+      </div>
+      {!isMaximized && (
+        <>
+          <div className="resize-handle absolute top-0 left-0 w-2 h-2 cursor-nwse-resize" onMouseDown={(e) => handleResize(e, 'top-left')} />
+          <div className="resize-handle absolute top-0 right-0 w-2 h-2 cursor-nesw-resize" onMouseDown={(e) => handleResize(e, 'top-right')} />
+          <div className="resize-handle absolute bottom-0 left-0 w-2 h-2 cursor-nesw-resize" onMouseDown={(e) => handleResize(e, 'bottom-left')} />
+          <div className="resize-handle absolute bottom-0 right-0 w-2 h-2 cursor-nwse-resize" onMouseDown={(e) => handleResize(e, 'bottom-right')} />
+          <div className="resize-handle absolute top-0 left-1/2 -translate-x-1/2 w-4 h-2 cursor-ns-resize" onMouseDown={(e) => handleResize(e, 'top')} />
+          <div className="resize-handle absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-2 cursor-ns-resize" onMouseDown={(e) => handleResize(e, 'bottom')} />
+          <div className="resize-handle absolute left-0 top-1/2 -translate-y-1/2 h-4 w-2 cursor-ew-resize" onMouseDown={(e) => handleResize(e, 'left')} />
+          <div className="resize-handle absolute right-0 top-1/2 -translate-y-1/2 h-4 w-2 cursor-ew-resize" onMouseDown={(e) => handleResize(e, 'right')} />
+        </>
+      )}
+    </Card>
+  );
+};
+
+
+const MINI_APPS: MiniApp[] = [
+  {
+    id: 'live-api-studio',
+    name: 'Live API Studio',
+    description: 'World\'s first persistent AI development studio with Mem0 integration',
+    url: 'https://www.mem0.ai/live-studio', // Changed to external for iframe demo
+    icon: '🚀',
+    category: 'live-studio',
+    rating: 5.0,
+    logoPath: '/images/aistudio.svg',
+    featured: true
+  },
+  {
+    id: 'google-ai-studio',
+    name: 'Google AI Studio',
+    description: 'Build with Gemini models and advanced AI capabilities',
+    url: 'https://aistudio.google.com',
+    icon: '🤖',
+    category: 'ai',
+    rating: 4.8,
+    logoPath: '/images/aistudio.svg',
+    featured: true
+  },
+  {
+    id: 'perplexity',
+    name: 'Perplexity AI',
+    description: 'AI-powered search and real-time research',
+    url: 'https://perplexity.ai',
+    icon: '🔍',
+    category: 'research',
+    rating: 4.7,
+    logoPath: '/images/perplexity.webp',
+    featured: true
+  },
+  {
+    id: 'claude',
+    name: 'Claude',
+    description: 'Anthropic\'s AI assistant for complex reasoning',
+    url: 'https://claude.ai',
+    icon: '🧠',
+    category: 'ai',
+    rating: 4.9,
+    logoPath: '/images/claude-1.png'
+  },
+  {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    description: 'OpenAI\'s conversational AI assistant',
+    url: 'https://chat.openai.com',
+    icon: '💬',
+    category: 'ai',
+    rating: 4.6,
+    logoPath: '/images/ChatGPT-Logo.png'
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    description: 'Code hosting, collaboration, and version control',
+    url: 'https://github.com',
+    icon: '🐙',
+    category: 'dev',
+    rating: 4.8,
+    logoPath: '/images/github-copilot.webp'
+  },
+  {
+    id: 'huggingchat',
+    name: 'HuggingChat',
+    description: 'Open-source AI chat with multiple models',
+    url: 'https://huggingface.co/chat',
+    icon: '🤗',
+    category: 'ai',
+    rating: 4.5,
+    logoPath: '/images/huggingchat.svg'
+  },
+  {
+    id: 'dify',
+    name: 'Dify',
+    description: 'LLMOps platform for AI application development',
+    url: 'https://dify.ai',
+    icon: '⚡',
+    category: 'dev',
+    rating: 4.6,
+    logoPath: '/images/dify.svg'
+  },
+  {
+    id: 'n8n',
+    name: 'n8n',
+    description: 'Workflow automation and integration platform',
+    url: 'https://n8n.io',
+    icon: '🔗',
+    category: 'productivity',
+    rating: 4.7,
+    logoPath: '/images/n8n.svg'
+  },
+  {
+    id: 'notebooklm',
+    name: 'NotebookLM',
+    description: 'AI-powered research and note-taking assistant',
+    url: 'https://notebooklm.google.com',
+    icon: '📚',
+    category: 'research',
+    rating: 4.8,
+    logoPath: '/images/notebooklm.svg'
+  }
+];
+
+type Theme = 'daydream-clouds' | 'purple-haze' | 'midnight-sky';
+
+interface ThemeConfig {
+  name: string;
+  icon: React.ReactNode;
+  background: string;
+  cardBackground: string;
+  textColor: string;
+  accentColor: string;
+  borderColor: string;
+  gradientFrom: string;
+  gradientTo: string;
+}
+
+const themes: Record<Theme, ThemeConfig> = {
+  'daydream-clouds': {
+    name: 'Daydream Clouds',
+    icon: <Cloud className="w-4 h-4" />,
+    background: 'bg-gradient-to-br from-sky-100 via-blue-50 to-cyan-100',
+    cardBackground: 'bg-white/85 backdrop-blur-md border-sky-200/60',
+    textColor: 'text-slate-700',
+    accentColor: 'text-sky-600',
+    borderColor: 'border-sky-200',
+    gradientFrom: 'from-sky-400',
+    gradientTo: 'to-cyan-500'
+  },
+  'purple-haze': {
+    name: 'Purple Neon',
+    icon: <Palette className="w-4 h-4" />,
+    background: 'bg-gradient-to-br from-fuchsia-600 via-purple-700 to-violet-900',
+    cardBackground: 'bg-purple-900/40 backdrop-blur-lg border-purple-400/30',
+    textColor: 'text-purple-100',
+    accentColor: 'text-fuchsia-300',
+    borderColor: 'border-purple-400/30',
+    gradientFrom: 'from-fuchsia-500',
+    gradientTo: 'to-purple-600'
+  },
+  'midnight-sky': {
+    name: 'Midnight Aurora',
+    icon: <Moon className="w-4 h-4" />,
+    background: 'bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-950',
+    cardBackground: 'bg-slate-800/60 backdrop-blur-lg border-indigo-500/30',
+    textColor: 'text-slate-100',
+    accentColor: 'text-indigo-300',
+    borderColor: 'border-indigo-500/30',
+    gradientFrom: 'from-indigo-500',
+    gradientTo: 'to-blue-600'
+  }
+};
+
+interface ActiveWindow {
+  id: string;
+  name: string;
+  url: string;
+  isMaximized: boolean;
+}
+
+interface MiniApps1Props {
+  reducedMotion?: boolean
+  neurodivergentMode?: boolean
+  theme?: 'light' | 'dark' | 'system'
+  className?: string
+}
+
+const MiniAppsComponent: React.FC<MiniApps1Props> = ({ 
+  reducedMotion = false, 
+  neurodivergentMode = false, 
+  theme = 'system',
+  className = ''
+}) => {
+  const [currentTheme, setCurrentTheme] = useState<Theme>('daydream-clouds');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [filteredApps, setFilteredApps] = useState(MINI_APPS);
+  const [activeWindows, setActiveWindows] = useState<ActiveWindow[]>([]);
+
+  const theme = themes[currentTheme];
+  const categories = ['all', ...Array.from(new Set(MINI_APPS.map(app => app.category)))];
+
+  useEffect(() => {
+    let filtered = MINI_APPS;
+
+    if (searchTerm) {
+      filtered = filtered.filter(app =>
+        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(app => app.category === selectedCategory);
+    }
+
+    setFilteredApps(filtered);
+  }, [searchTerm, selectedCategory]);
+
+  const handleAppLaunch = useCallback((app: MiniApp) => {
+    setActiveWindows(prevWindows => {
+      if (prevWindows.some(window => window.id === app.id)) {
+        return prevWindows; // App already open
+      }
+      return [...prevWindows, { id: app.id, name: app.name, url: app.url, isMaximized: false }];
+    });
+  }, []);
+
+  const handleCloseWindow = useCallback((id: string) => {
+    setActiveWindows(prevWindows => prevWindows.filter(window => window.id !== id));
+  }, []);
+
+  const handleMaximizeToggle = useCallback((id: string) => {
+    setActiveWindows(prevWindows =>
+      prevWindows.map(window =>
+        window.id === id ? { ...window, isMaximized: !window.isMaximized } : window
+      )
+    );
+  }, []);
+
+  return (
+    <div className={`min-h-screen p-6 transition-all duration-700 ease-in-out ${theme.background} relative`}>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className={`text-4xl font-bold ${theme.textColor} mb-2`}>
+                Mini Apps Studio
+              </h1>
+              <p className={`text-lg ${theme.textColor}/70`}>
+                Discover and launch your favorite AI tools and applications
+              </p>
+            </div>
+            
+            {/* Theme Selector */}
+            <div className="flex items-center gap-2">
+              <Palette className={`w-5 h-5 ${theme.accentColor}`} />
+              <Select value={currentTheme} onValueChange={(value: Theme) => setCurrentTheme(value)}>
+                <SelectTrigger className={`w-48 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover text-popover-foreground">
+                  {Object.entries(themes).map(([key, themeConfig]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        {themeConfig.icon}
+                        {themeConfig.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textColor}/50`} />
+              <Input
+                placeholder="Search apps..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`pl-10 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor} placeholder:${theme.textColor}/50`}
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className={`w-48 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover text-popover-foreground">
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Featured Apps */}
+        <div className="mb-8">
+          <h2 className={`text-2xl font-semibold ${theme.textColor} mb-4`}>Featured Apps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredApps.filter(app => app.featured).map((app) => (
+              <Card
+                key={app.id}
+                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl ${theme.cardBackground} ${theme.borderColor} rounded-2xl overflow-hidden`}
+                onClick={() => handleAppLaunch(app)}
+              >
+                <div className={`h-2 bg-gradient-to-r ${theme.gradientFrom} ${theme.gradientTo} transition-all duration-300 group-hover:h-3`} />
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">{app.icon}</div>
+                      <div>
+                        <h3 className={`font-semibold ${theme.textColor} group-hover:${theme.accentColor} transition-colors duration-200`}>
+                          {app.name}
+                        </h3>
+                        <Badge variant="secondary" className={`text-xs ${theme.accentColor} bg-${theme.accentColor}/10`}>
+                          {app.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <ExternalLink className={`w-4 h-4 ${theme.textColor}/50 group-hover:${theme.accentColor} transition-colors duration-200`} />
+                  </div>
+                  <p className={`text-sm ${theme.textColor}/70 mb-4 line-clamp-2`}>
+                    {app.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Star className={`w-4 h-4 fill-yellow-400 text-yellow-400`} />
+                      <span className={`text-sm font-medium ${theme.textColor}`}>
+                        {app.rating}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className={`bg-gradient-to-r ${theme.gradientFrom} ${theme.gradientTo} text-white border-0 hover:shadow-lg transition-all duration-200`}
+                      onClick={(e) => { e.stopPropagation(); handleAppLaunch(app); }}
+                    >
+                      Launch
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* All Apps */}
+        <div>
+          <h2 className={`text-2xl font-semibold ${theme.textColor} mb-4`}>All Apps</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredApps.map((app) => (
+              <Card
+                key={app.id}
+                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme.cardBackground} ${theme.borderColor} rounded-xl overflow-hidden`}
+                onClick={() => handleAppLaunch(app)}
+              >
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="text-2xl">{app.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`font-medium ${theme.textColor} group-hover:${theme.accentColor} transition-colors duration-200 truncate`}>
+                        {app.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`text-xs ${theme.borderColor}`}>
+                          {app.category}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span className={`text-xs ${theme.textColor}/70`}>
+                            {app.rating}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className={`text-xs ${theme.textColor}/60 line-clamp-2 mb-3`}>
+                    {app.description}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`w-full ${theme.borderColor} ${theme.textColor} hover:bg-gradient-to-r hover:${theme.gradientFrom} hover:${theme.gradientTo} hover:text-white hover:border-transparent transition-all duration-200`}
+                    onClick={(e) => { e.stopPropagation(); handleAppLaunch(app); }}
+                  >
+                    <ExternalLink className="w-3 h-3 mr-2" />
+                    Open
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {filteredApps.length === 0 && (
+          <div className="text-center py-12">
+            <div className={`text-6xl mb-4 ${theme.textColor}/30`}>🔍</div>
+            <h3 className={`text-xl font-medium ${theme.textColor} mb-2`}>No apps found</h3>
+            <p className={`${theme.textColor}/60`}>
+              Try adjusting your search terms or category filter
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Resizable Windows Container */}
+      {activeWindows.map((window) => (
+        <ResizableWindow
+          key={window.id}
+          id={window.id}
+          title={window.name}
+          url={window.url}
+          onClose={handleCloseWindow}
+          onMaximizeToggle={handleMaximizeToggle}
+          isMaximized={window.isMaximized}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default MiniAppsComponent;
+export type { MiniApps1Props };
