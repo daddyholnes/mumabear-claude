@@ -17,7 +17,7 @@ import {
   Smile,
   Copy,
   Send,
-  Stop,
+  Square, // Changed from 'Stop' which doesn't exist
   Volume2,
   VolumeX,
   Sparkles,
@@ -350,7 +350,7 @@ const GeminiLiveStudio: React.FC<LiveStudio2Props> = ({
   const [functionCalling, setFunctionCalling] = useState(false);
   const [webSearch, setWebSearch] = useState(false);
   const [rag, setRag] = useState(false);
-  const [theme, setTheme] = useState('purple-haze');
+  const [currentTheme, setCurrentTheme] = useState('purple-haze');
   const [isRecording, setIsRecording] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -460,7 +460,7 @@ const GeminiLiveStudio: React.FC<LiveStudio2Props> = ({
     }
   };
 
-  const currentTheme = themes.find(t => t.id === theme) || themes[0];
+  const currentThemeConfig = themes.find(t => t.id === currentTheme) || themes[0];
 
   useEffect(() => {
     if (isLiveMode) {
@@ -484,10 +484,10 @@ const GeminiLiveStudio: React.FC<LiveStudio2Props> = ({
   }, [isLiveMode]);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${currentTheme.gradient} relative overflow-hidden`}>
+    <div className={`min-h-screen bg-gradient-to-br ${currentThemeConfig.gradient} relative overflow-hidden`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {theme === 'midnight-sky' && (
+        {currentTheme === 'midnight-sky' && (
           <>
             {[...Array(50)].map((_, i) => (
               <motion.div
@@ -511,7 +511,7 @@ const GeminiLiveStudio: React.FC<LiveStudio2Props> = ({
           </>
         )}
         
-        {theme === 'daytime-clouds' && (
+        {currentTheme === 'daytime-clouds' && (
           <>
             {[...Array(5)].map((_, i) => (
               <motion.div
@@ -565,10 +565,10 @@ const GeminiLiveStudio: React.FC<LiveStudio2Props> = ({
               {themes.map((themeOption) => (
                 <button
                   key={themeOption.id}
-                  onClick={() => setTheme(themeOption.id)}
+                  onClick={() => setCurrentTheme(themeOption.id)}
                   className={cn(
                     "w-full p-2 rounded-lg text-left transition-colors",
-                    theme === themeOption.id ? "bg-white/20" : "bg-white/5 hover:bg-white/10"
+                    currentTheme === themeOption.id ? "bg-white/20" : "bg-white/5 hover:bg-white/10"
                   )}
                 >
                   <div className="text-white text-sm">{themeOption.name}</div>

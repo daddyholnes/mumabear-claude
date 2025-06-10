@@ -385,7 +385,7 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
   const [filteredApps, setFilteredApps] = useState(MINI_APPS);
   const [activeWindows, setActiveWindows] = useState<ActiveWindow[]>([]);
 
-  const theme = themes[currentTheme];
+  const themeConfig = themes[currentTheme];
   const categories = ['all', ...Array.from(new Set(MINI_APPS.map(app => app.category)))];
 
   useEffect(() => {
@@ -427,25 +427,25 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
   }, []);
 
   return (
-    <div className={`min-h-screen p-6 transition-all duration-700 ease-in-out ${theme.background} relative`}>
+    <div className={`min-h-screen p-6 transition-all duration-700 ease-in-out ${themeConfig.background} relative`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className={`text-4xl font-bold ${theme.textColor} mb-2`}>
+              <h1 className={`text-4xl font-bold ${themeConfig.textColor} mb-2`}>
                 Mini Apps Studio
               </h1>
-              <p className={`text-lg ${theme.textColor}/70`}>
+              <p className={`text-lg ${themeConfig.textColor}/70`}>
                 Discover and launch your favorite AI tools and applications
               </p>
             </div>
             
             {/* Theme Selector */}
             <div className="flex items-center gap-2">
-              <Palette className={`w-5 h-5 ${theme.accentColor}`} />
-              <Select value={currentTheme} onValueChange={(value: Theme) => setCurrentTheme(value)}>
-                <SelectTrigger className={`w-48 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor}`}>
+              <Palette className={`w-5 h-5 ${themeConfig.accentColor}`} />
+              <Select value={currentTheme} onValueChange={(value: string) => setCurrentTheme(value as Theme)}>
+                <SelectTrigger className={`w-48 ${themeConfig.cardBackground} ${themeConfig.borderColor} ${themeConfig.textColor}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover text-popover-foreground">
@@ -465,16 +465,16 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${theme.textColor}/50`} />
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${themeConfig.textColor}/50`} />
               <Input
                 placeholder="Search apps..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`pl-10 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor} placeholder:${theme.textColor}/50`}
+                className={`pl-10 ${themeConfig.cardBackground} ${themeConfig.borderColor} ${themeConfig.textColor} placeholder:${themeConfig.textColor}/50`}
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className={`w-48 ${theme.cardBackground} ${theme.borderColor} ${theme.textColor}`}>
+              <SelectTrigger className={`w-48 ${themeConfig.cardBackground} ${themeConfig.borderColor} ${themeConfig.textColor}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover text-popover-foreground">
@@ -490,43 +490,43 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
 
         {/* Featured Apps */}
         <div className="mb-8">
-          <h2 className={`text-2xl font-semibold ${theme.textColor} mb-4`}>Featured Apps</h2>
+          <h2 className={`text-2xl font-semibold ${themeConfig.textColor} mb-4`}>Featured Apps</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredApps.filter(app => app.featured).map((app) => (
               <Card
                 key={app.id}
-                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl ${theme.cardBackground} ${theme.borderColor} rounded-2xl overflow-hidden`}
+                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl ${themeConfig.cardBackground} ${themeConfig.borderColor} rounded-2xl overflow-hidden`}
                 onClick={() => handleAppLaunch(app)}
               >
-                <div className={`h-2 bg-gradient-to-r ${theme.gradientFrom} ${theme.gradientTo} transition-all duration-300 group-hover:h-3`} />
+                <div className={`h-2 bg-gradient-to-r ${themeConfig.gradientFrom} ${themeConfig.gradientTo} transition-all duration-300 group-hover:h-3`} />
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="text-3xl">{app.icon}</div>
                       <div>
-                        <h3 className={`font-semibold ${theme.textColor} group-hover:${theme.accentColor} transition-colors duration-200`}>
+                        <h3 className={`font-semibold ${themeConfig.textColor} group-hover:${themeConfig.accentColor} transition-colors duration-200`}>
                           {app.name}
                         </h3>
-                        <Badge variant="secondary" className={`text-xs ${theme.accentColor} bg-${theme.accentColor}/10`}>
+                        <Badge variant="secondary" className={`text-xs ${themeConfig.accentColor} bg-${themeConfig.accentColor}/10`}>
                           {app.category}
                         </Badge>
                       </div>
                     </div>
-                    <ExternalLink className={`w-4 h-4 ${theme.textColor}/50 group-hover:${theme.accentColor} transition-colors duration-200`} />
+                    <ExternalLink className={`w-4 h-4 ${themeConfig.textColor}/50 group-hover:${themeConfig.accentColor} transition-colors duration-200`} />
                   </div>
-                  <p className={`text-sm ${theme.textColor}/70 mb-4 line-clamp-2`}>
+                  <p className={`text-sm ${themeConfig.textColor}/70 mb-4 line-clamp-2`}>
                     {app.description}
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Star className={`w-4 h-4 fill-yellow-400 text-yellow-400`} />
-                      <span className={`text-sm font-medium ${theme.textColor}`}>
+                      <span className={`text-sm font-medium ${themeConfig.textColor}`}>
                         {app.rating}
                       </span>
                     </div>
                     <Button
                       size="sm"
-                      className={`bg-gradient-to-r ${theme.gradientFrom} ${theme.gradientTo} text-white border-0 hover:shadow-lg transition-all duration-200`}
+                      className={`bg-gradient-to-r ${themeConfig.gradientFrom} ${themeConfig.gradientTo} text-white border-0 hover:shadow-lg transition-all duration-200`}
                       onClick={(e) => { e.stopPropagation(); handleAppLaunch(app); }}
                     >
                       Launch
@@ -540,41 +540,41 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
 
         {/* All Apps */}
         <div>
-          <h2 className={`text-2xl font-semibold ${theme.textColor} mb-4`}>All Apps</h2>
+          <h2 className={`text-2xl font-semibold ${themeConfig.textColor} mb-4`}>All Apps</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredApps.map((app) => (
               <Card
                 key={app.id}
-                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme.cardBackground} ${theme.borderColor} rounded-xl overflow-hidden`}
+                className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${themeConfig.cardBackground} ${themeConfig.borderColor} rounded-xl overflow-hidden`}
                 onClick={() => handleAppLaunch(app)}
               >
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="text-2xl">{app.icon}</div>
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-medium ${theme.textColor} group-hover:${theme.accentColor} transition-colors duration-200 truncate`}>
+                      <h3 className={`font-medium ${themeConfig.textColor} group-hover:${themeConfig.accentColor} transition-colors duration-200 truncate`}>
                         {app.name}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`text-xs ${theme.borderColor}`}>
+                        <Badge variant="outline" className={`text-xs ${themeConfig.borderColor}`}>
                           {app.category}
                         </Badge>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          <span className={`text-xs ${theme.textColor}/70`}>
+                          <span className={`text-xs ${themeConfig.textColor}/70`}>
                             {app.rating}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <p className={`text-xs ${theme.textColor}/60 line-clamp-2 mb-3`}>
+                  <p className={`text-xs ${themeConfig.textColor}/60 line-clamp-2 mb-3`}>
                     {app.description}
                   </p>
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`w-full ${theme.borderColor} ${theme.textColor} hover:bg-gradient-to-r hover:${theme.gradientFrom} hover:${theme.gradientTo} hover:text-white hover:border-transparent transition-all duration-200`}
+                    className={`w-full ${themeConfig.borderColor} ${themeConfig.textColor} hover:bg-gradient-to-r hover:${themeConfig.gradientFrom} hover:${themeConfig.gradientTo} hover:text-white hover:border-transparent transition-all duration-200`}
                     onClick={(e) => { e.stopPropagation(); handleAppLaunch(app); }}
                   >
                     <ExternalLink className="w-3 h-3 mr-2" />
@@ -588,9 +588,9 @@ const MiniAppsComponent: React.FC<MiniApps1Props> = ({
 
         {filteredApps.length === 0 && (
           <div className="text-center py-12">
-            <div className={`text-6xl mb-4 ${theme.textColor}/30`}>🔍</div>
-            <h3 className={`text-xl font-medium ${theme.textColor} mb-2`}>No apps found</h3>
-            <p className={`${theme.textColor}/60`}>
+            <div className={`text-6xl mb-4 ${themeConfig.textColor}/30`}>🔍</div>
+            <h3 className={`text-xl font-medium ${themeConfig.textColor} mb-2`}>No apps found</h3>
+            <p className={`${themeConfig.textColor}/60`}>
               Try adjusting your search terms or category filter
             </p>
           </div>

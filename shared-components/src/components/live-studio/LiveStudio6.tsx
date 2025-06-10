@@ -553,16 +553,16 @@ export function GeminiLiveStudio({
     }
   };
 
-  const theme = themes[currentTheme];
+  const themeConfig = themes[currentTheme];
 
   return (
     <TooltipProvider>
-      <div className={cn("min-h-screen flex", theme.gradient)}>
+      <div className={cn("min-h-screen flex", themeConfig.gradient)}>
         <Particles
           className="absolute inset-0"
           quantity={150}
           ease={80}
-          color={theme.particles}
+          color={themeConfig.particles}
           refresh
         />
         

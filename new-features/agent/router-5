@@ -1,0 +1,1171 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Activity, 
+  AlertTriangle, 
+  BarChart3, 
+  Brain, 
+  CheckCircle, 
+  Clock, 
+  Command, 
+  DollarSign, 
+  Filter, 
+  Loader, 
+  Play, 
+  Pause, 
+  RefreshCw, 
+  Settings, 
+  Zap, 
+  TrendingUp, 
+  TrendingDown,
+  Server,
+  Database,
+  Cpu,
+  HardDrive,
+  Network,
+  Shield,
+  AlertCircle,
+  X,
+  ChevronDown,
+  Eye,
+  Download,
+  Share,
+  RotateCcw
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
+// Types
+interface TaskAnalysis {
+  task_id: string;
+  complexity_score: number;
+  estimated_duration: number;
+  resource_requirements: ResourceRequirements;
+  recommended_environment: 'e2b' | 'scrapybara';
+  confidence_level: number;
+  analysis_factors: AnalysisFactor[];
+  routing_reason: string;
+}
+
+interface ResourceRequirements {
+  cpu: number;
+  memory: number;
+  storage: number;
+  network: boolean;
+}
+
+interface AnalysisFactor {
+  factor: string;
+  weight: number;
+  impact: 'low' | 'medium' | 'high';
+}
+
+interface ExecutionSession {
+  session_id: string;
+  task_description: string;
+  environment: 'e2b' | 'scrapybara';
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+  start_time: string;
+  end_time?: string;
+  duration?: number;
+  result?: ExecutionResult;
+  resource_usage: ResourceUsage;
+  cost_estimate: number;
+}
+
+interface ExecutionResult {
+  output: string;
+  success: boolean;
+  error?: string;
+}
+
+interface ResourceUsage {
+  cpu_usage: number;
+  memory_usage: number;
+  execution_time: number;
+}
+
+interface RouterMetrics {
+  total_executions: number;
+  success_rate: number;
+  average_cost_per_execution: number;
+  environment_distribution: {
+    e2b_percentage: number;
+    scrapybara_percentage: number;
+  };
+  performance_stats: PerformanceStats;
+  cost_savings: number;
+  routing_accuracy: number;
+}
+
+interface PerformanceStats {
+  avg_response_time: number;
+  throughput: number;
+  error_rate: number;
+}
+
+interface EnvironmentStatus {
+  name: string;
+  status: 'healthy' | 'degraded' | 'down';
+  capacity: number;
+  queue_length: number;
+  response_time: number;
+  error_rate: number;
+}
+
+// Mock Data
+const mockTaskAnalysis: TaskAnalysis = {
+  task_id: 'task_123',
+  complexity_score: 7.5,
+  estimated_duration: 45,
+  resource_requirements: {
+    cpu: 2,
+    memory: 4096,
+    storage: 1024,
+    network: true
+  },
+  recommended_environment: 'scrapybara',
+  confidence_level: 0.85,
+  analysis_factors: [
+    { factor: 'Code Complexity', weight: 0.3, impact: 'high' },
+    { factor: 'Resource Requirements', weight: 0.25, impact: 'medium' },
+    { factor: 'Network Dependencies', weight: 0.2, impact: 'medium' }
+  ],
+  routing_reason: 'High complexity task requiring full VM environment with network access'
+};
+
+const mockSessions: ExecutionSession[] = [
+  {
+    session_id: 'sess_001',
+    task_description: 'Web scraping with dynamic content',
+    environment: 'scrapybara',
+    status: 'running',
+    start_time: '2024-01-15T10:30:00Z',
+    resource_usage: { cpu_usage: 75, memory_usage: 60, execution_time: 120 },
+    cost_estimate: 0.45
+  },
+  {
+    session_id: 'sess_002',
+    task_description: 'Simple data validation',
+    environment: 'e2b',
+    status: 'completed',
+    start_time: '2024-01-15T10:25:00Z',
+    end_time: '2024-01-15T10:27:00Z',
+    duration: 120,
+    resource_usage: { cpu_usage: 30, memory_usage: 25, execution_time: 120 },
+    cost_estimate: 0.12
+  },
+  {
+    session_id: 'sess_003',
+    task_description: 'API integration testing',
+    environment: 'e2b',
+    status: 'failed',
+    start_time: '2024-01-15T10:20:00Z',
+    end_time: '2024-01-15T10:22:00Z',
+    duration: 120,
+    resource_usage: { cpu_usage: 45, memory_usage: 35, execution_time: 120 },
+    cost_estimate: 0.18
+  }
+];
+
+const mockMetrics: RouterMetrics = {
+  total_executions: 1247,
+  success_rate: 94.2,
+  average_cost_per_execution: 0.23,
+  environment_distribution: {
+    e2b_percentage: 65,
+    scrapybara_percentage: 35
+  },
+  performance_stats: {
+    avg_response_time: 2.3,
+    throughput: 45.2,
+    error_rate: 5.8
+  },
+  cost_savings: 342.50,
+  routing_accuracy: 91.5
+};
+
+const mockEnvironmentStatus: { e2b: EnvironmentStatus; scrapybara: EnvironmentStatus } = {
+  e2b: {
+    name: 'E2B',
+    status: 'healthy',
+    capacity: 85,
+    queue_length: 3,
+    response_time: 1.2,
+    error_rate: 2.1
+  },
+  scrapybara: {
+    name: 'Scrapybara',
+    status: 'healthy',
+    capacity: 72,
+    queue_length: 7,
+    response_time: 3.8,
+    error_rate: 4.2
+  }
+};
+
+// Components
+const ComplexityMeter: React.FC<{ score: number; confidence: number }> = ({ score, confidence }) => {
+  const getComplexityColor = (score: number) => {
+    if (score <= 3) return 'bg-green-500';
+    if (score <= 6) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  const getComplexityLabel = (score: number) => {
+    if (score <= 3) return 'Low';
+    if (score <= 6) return 'Medium';
+    return 'High';
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">Complexity Score</span>
+        <span className="text-lg font-bold text-foreground">{score.toFixed(1)}/10</span>
+      </div>
+      <div className="relative">
+        <div className="w-full bg-muted rounded-full h-3">
+          <div 
+            className={cn("h-3 rounded-full transition-all duration-500", getComplexityColor(score))}
+            style={{ width: `${(score / 10) * 100}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Simple</span>
+          <span className="font-medium">{getComplexityLabel(score)}</span>
+          <span>Complex</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">Confidence</span>
+        <span className="font-medium text-foreground">{(confidence * 100).toFixed(1)}%</span>
+      </div>
+    </div>
+  );
+};
+
+const EnvironmentBadge: React.FC<{ environment: 'e2b' | 'scrapybara'; status?: ExecutionSession['status'] }> = ({ 
+  environment, 
+  status 
+}) => {
+  const getEnvironmentStyle = (env: 'e2b' | 'scrapybara') => {
+    return env === 'e2b' 
+      ? 'bg-blue-100 text-blue-800 border-blue-200' 
+      : 'bg-orange-100 text-orange-800 border-orange-200';
+  };
+
+  const getStatusStyle = (status?: ExecutionSession['status']) => {
+    switch (status) {
+      case 'running': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Badge variant="outline" className={getEnvironmentStyle(environment)}>
+        {environment.toUpperCase()}
+      </Badge>
+      {status && (
+        <Badge variant="outline" className={getStatusStyle(status)}>
+          {status}
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+const SessionCard: React.FC<{ session: ExecutionSession; onSelect: () => void }> = ({ session, onSelect }) => {
+  const getStatusIcon = (status: ExecutionSession['status']) => {
+    switch (status) {
+      case 'running': return <Loader className="w-4 h-4 animate-spin text-yellow-500" />;
+      case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'failed': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'cancelled': return <X className="w-4 h-4 text-gray-500" />;
+      default: return <Clock className="w-4 h-4 text-blue-500" />;
+    }
+  };
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return 'N/A';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  return (
+    <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onSelect}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(session.status)}
+            <span className="font-medium text-sm">{session.session_id}</span>
+          </div>
+          <EnvironmentBadge environment={session.environment} status={session.status} />
+        </div>
+        
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          {session.task_description}
+        </p>
+        
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-muted-foreground">Duration:</span>
+            <span className="ml-1 font-medium">{formatDuration(session.duration)}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Cost:</span>
+            <span className="ml-1 font-medium">${session.cost_estimate.toFixed(2)}</span>
+          </div>
+        </div>
+        
+        <div className="mt-3 space-y-1">
+          <div className="flex justify-between text-xs">
+            <span>CPU</span>
+            <span>{session.resource_usage.cpu_usage}%</span>
+          </div>
+          <Progress value={session.resource_usage.cpu_usage} className="h-1" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const TaskAnalysisPanel: React.FC<{
+  task: string;
+  analysis: TaskAnalysis | null;
+  isAnalyzing: boolean;
+  onAnalyze: (task: string) => void;
+  onExecute: (environment?: 'e2b' | 'scrapybara') => void;
+}> = ({ task, analysis, isAnalyzing, onAnalyze, onExecute }) => {
+  const [currentTask, setCurrentTask] = useState(task);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-purple-500" />
+          Task Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Task Description</label>
+          <textarea
+            value={currentTask}
+            onChange={(e) => setCurrentTask(e.target.value)}
+            placeholder="Describe your task..."
+            className="w-full p-3 border rounded-lg resize-none h-20 bg-background"
+          />
+        </div>
+
+        <Button 
+          onClick={() => onAnalyze(currentTask)}
+          disabled={!currentTask.trim() || isAnalyzing}
+          className="w-full"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Zap className="w-4 h-4 mr-2" />
+              Analyze Task
+            </>
+          )}
+        </Button>
+
+        {analysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4 pt-4 border-t"
+          >
+            <ComplexityMeter 
+              score={analysis.complexity_score} 
+              confidence={analysis.confidence_level} 
+            />
+
+            <div className="space-y-3">
+              <h4 className="font-medium">Recommended Environment</h4>
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <EnvironmentBadge environment={analysis.recommended_environment} />
+                <span className="text-sm text-muted-foreground">
+                  Est. {analysis.estimated_duration}s
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {analysis.routing_reason}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Resource Requirements</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span>CPU:</span>
+                  <span>{analysis.resource_requirements.cpu} cores</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Memory:</span>
+                  <span>{analysis.resource_requirements.memory}MB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Storage:</span>
+                  <span>{analysis.resource_requirements.storage}MB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Network:</span>
+                  <span>{analysis.resource_requirements.network ? 'Yes' : 'No'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => onExecute(analysis.recommended_environment)}
+                className="flex-1"
+              >
+                Execute ({analysis.recommended_environment.toUpperCase()})
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => onExecute()}
+                className="flex-1"
+              >
+                Manual Override
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const ExecutionSessionMonitor: React.FC<{
+  sessions: ExecutionSession[];
+  selectedSession: string | null;
+  onSessionSelect: (sessionId: string) => void;
+  onSessionCancel: (sessionId: string) => void;
+  onSessionRetry: (sessionId: string) => void;
+}> = ({ sessions, selectedSession, onSessionSelect, onSessionCancel, onSessionRetry }) => {
+  const [filter, setFilter] = useState<'all' | 'running' | 'completed' | 'failed'>('all');
+
+  const filteredSessions = sessions.filter(session => {
+    if (filter === 'all') return true;
+    return session.status === filter;
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-green-500" />
+            Execution Sessions
+          </CardTitle>
+          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="running">Running</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {filteredSessions.map((session) => (
+            <SessionCard
+              key={session.session_id}
+              session={session}
+              onSelect={() => onSessionSelect(session.session_id)}
+            />
+          ))}
+          {filteredSessions.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No sessions found
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const EnvironmentStatusPanel: React.FC<{
+  e2bStatus: EnvironmentStatus;
+  scrapybaraStatus: EnvironmentStatus;
+  onHealthCheck: (environment: 'e2b' | 'scrapybara') => void;
+  onEnvironmentSettings: (environment: string) => void;
+}> = ({ e2bStatus, scrapybaraStatus, onHealthCheck, onEnvironmentSettings }) => {
+  const getStatusColor = (status: EnvironmentStatus['status']) => {
+    switch (status) {
+      case 'healthy': return 'text-green-500';
+      case 'degraded': return 'text-yellow-500';
+      case 'down': return 'text-red-500';
+    }
+  };
+
+  const getStatusIcon = (status: EnvironmentStatus['status']) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle className="w-4 h-4" />;
+      case 'degraded': return <AlertTriangle className="w-4 h-4" />;
+      case 'down': return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
+  const EnvironmentCard: React.FC<{ env: EnvironmentStatus; envKey: 'e2b' | 'scrapybara' }> = ({ env, envKey }) => (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">{env.name}</CardTitle>
+          <div className={cn("flex items-center gap-1", getStatusColor(env.status))}>
+            {getStatusIcon(env.status)}
+            <span className="text-sm font-medium capitalize">{env.status}</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Capacity</span>
+              <span>{env.capacity}%</span>
+            </div>
+            <Progress value={env.capacity} className="h-2" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Queue Length</span>
+              <div className="font-medium">{env.queue_length}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Response Time</span>
+              <div className="font-medium">{env.response_time}s</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Error Rate</span>
+              <div className="font-medium">{env.error_rate}%</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Status</span>
+              <div className={cn("font-medium capitalize", getStatusColor(env.status))}>
+                {env.status}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onHealthCheck(envKey)}
+            className="flex-1"
+          >
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Health Check
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onEnvironmentSettings(envKey)}
+            className="flex-1"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+            Settings
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold flex items-center gap-2">
+        <Server className="w-5 h-5" />
+        Environment Status
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <EnvironmentCard env={e2bStatus} envKey="e2b" />
+        <EnvironmentCard env={scrapybaraStatus} envKey="scrapybara" />
+      </div>
+    </div>
+  );
+};
+
+const CostOptimizationMetrics: React.FC<{
+  metrics: RouterMetrics;
+  timeRange: '1h' | '24h' | '7d' | '30d';
+  onTimeRangeChange: (range: string) => void;
+  onOptimizationSuggestion: () => void;
+}> = ({ metrics, timeRange, onTimeRangeChange, onOptimizationSuggestion }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-green-500" />
+            Cost Optimization
+          </CardTitle>
+          <Select value={timeRange} onValueChange={onTimeRangeChange}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1h">1H</SelectItem>
+              <SelectItem value="24h">24H</SelectItem>
+              <SelectItem value="7d">7D</SelectItem>
+              <SelectItem value="30d">30D</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              ${metrics.cost_savings.toFixed(2)}
+            </div>
+            <div className="text-sm text-muted-foreground">Cost Savings</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">
+              ${metrics.average_cost_per_execution.toFixed(2)}
+            </div>
+            <div className="text-sm text-muted-foreground">Avg Cost</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">
+              {metrics.routing_accuracy.toFixed(1)}%
+            </div>
+            <div className="text-sm text-muted-foreground">Accuracy</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">
+              {metrics.total_executions}
+            </div>
+            <div className="text-sm text-muted-foreground">Total Runs</div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="font-medium">Environment Distribution</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>E2B (Quick & Cheap)</span>
+              <span>{metrics.environment_distribution.e2b_percentage}%</span>
+            </div>
+            <Progress value={metrics.environment_distribution.e2b_percentage} className="h-2" />
+            
+            <div className="flex justify-between text-sm">
+              <span>Scrapybara (Full VM)</span>
+              <span>{metrics.environment_distribution.scrapybara_percentage}%</span>
+            </div>
+            <Progress value={metrics.environment_distribution.scrapybara_percentage} className="h-2" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="font-medium">Performance Stats</h4>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Response Time</span>
+              <div className="font-medium">{metrics.performance_stats.avg_response_time}s</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Throughput</span>
+              <div className="font-medium">{metrics.performance_stats.throughput}/min</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Success Rate</span>
+              <div className="font-medium">{metrics.success_rate}%</div>
+            </div>
+          </div>
+        </div>
+
+        <Button onClick={onOptimizationSuggestion} className="w-full">
+          <TrendingUp className="w-4 h-4 mr-2" />
+          Get Optimization Suggestions
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+const RoutingIntelligenceVisualizer: React.FC<{
+  currentAnalysis: TaskAnalysis | null;
+  routingHistory: any[];
+  mamaBarInsights: string[];
+  onInsightRequest: () => void;
+}> = ({ currentAnalysis, routingHistory, mamaBarInsights, onInsightRequest }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-purple-500" />
+          Mama Bear Routing Intelligence
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">🐻</span>
+          </div>
+          <div className="flex-1">
+            <h4 className="font-medium">Mama Bear AI</h4>
+            <p className="text-sm text-muted-foreground">
+              Your intelligent routing assistant
+            </p>
+          </div>
+        </div>
+
+        {currentAnalysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-3"
+          >
+            <h4 className="font-medium">Current Analysis Insights</h4>
+            <div className="space-y-2">
+              {currentAnalysis.analysis_factors.map((factor, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <span className="text-sm">{factor.factor}</span>
+                  <Badge variant={factor.impact === 'high' ? 'destructive' : factor.impact === 'medium' ? 'default' : 'secondary'}>
+                    {factor.impact}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        <div className="space-y-3">
+          <h4 className="font-medium">Recent Insights</h4>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {mamaBarInsights.map((insight, index) => (
+              <div key={index} className="text-sm p-2 bg-muted rounded">
+                💡 {insight}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button onClick={onInsightRequest} variant="outline" className="w-full">
+          <Zap className="w-4 h-4 mr-2" />
+          Request New Insights
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ManualRoutingControls: React.FC<{
+  onManualRoute: (task: string, environment: 'e2b' | 'scrapybara', override_reason: string) => void;
+  onBulkRoute: (tasks: string[], environment: 'e2b' | 'scrapybara') => void;
+  onRoutingRuleCreate: (rule: any) => void;
+}> = ({ onManualRoute, onBulkRoute, onRoutingRuleCreate }) => {
+  const [manualTask, setManualTask] = useState('');
+  const [selectedEnv, setSelectedEnv] = useState<'e2b' | 'scrapybara'>('e2b');
+  const [overrideReason, setOverrideReason] = useState('');
+
+  const handleManualRoute = () => {
+    if (manualTask.trim() && overrideReason.trim()) {
+      onManualRoute(manualTask, selectedEnv, overrideReason);
+      setManualTask('');
+      setOverrideReason('');
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Command className="w-5 h-5 text-blue-500" />
+          Manual Routing Controls
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Task Description</label>
+          <textarea
+            value={manualTask}
+            onChange={(e) => setManualTask(e.target.value)}
+            placeholder="Enter task for manual routing..."
+            className="w-full p-3 border rounded-lg resize-none h-16 bg-background"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Target Environment</label>
+          <Select value={selectedEnv} onValueChange={(value: any) => setSelectedEnv(value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="e2b">E2B (Quick & Cheap)</SelectItem>
+              <SelectItem value="scrapybara">Scrapybara (Full VM)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Override Reason</label>
+          <input
+            type="text"
+            value={overrideReason}
+            onChange={(e) => setOverrideReason(e.target.value)}
+            placeholder="Why override automatic routing?"
+            className="w-full p-3 border rounded-lg bg-background"
+          />
+        </div>
+
+        <Button onClick={handleManualRoute} className="w-full" disabled={!manualTask.trim() || !overrideReason.trim()}>
+          <Play className="w-4 h-4 mr-2" />
+          Execute Manual Route
+        </Button>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <h4 className="font-medium">Emergency Controls</h4>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm">
+              <Pause className="w-4 h-4 mr-1" />
+              Pause All
+            </Button>
+            <Button variant="outline" size="sm">
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Reset Queue
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ExecutionResultsViewer: React.FC<{
+  session: ExecutionSession;
+  result: ExecutionResult | null;
+  onDownloadResults: () => void;
+  onShareResults: () => void;
+  onRerunTask: () => void;
+}> = ({ session, result, onDownloadResults, onShareResults, onRerunTask }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-blue-500" />
+            Execution Results
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onDownloadResults}>
+              <Download className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={onShareResults}>
+              <Share className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={onRerunTask}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Session ID:</span>
+            <div className="font-mono">{session.session_id}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Environment:</span>
+            <div><EnvironmentBadge environment={session.environment} /></div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Duration:</span>
+            <div>{session.duration ? `${session.duration}s` : 'N/A'}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Cost:</span>
+            <div>${session.cost_estimate.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h4 className="font-medium">Resource Usage</h4>
+          <div className="space-y-2">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>CPU Usage</span>
+                <span>{session.resource_usage.cpu_usage}%</span>
+              </div>
+              <Progress value={session.resource_usage.cpu_usage} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Memory Usage</span>
+                <span>{session.resource_usage.memory_usage}%</span>
+              </div>
+              <Progress value={session.resource_usage.memory_usage} className="h-2" />
+            </div>
+          </div>
+        </div>
+
+        {result && (
+          <div className="space-y-2">
+            <h4 className="font-medium">Output</h4>
+            <div className="p-3 bg-muted rounded-lg font-mono text-sm max-h-32 overflow-y-auto">
+              {result.success ? (
+                <div className="text-green-600">✓ {result.output}</div>
+              ) : (
+                <div className="text-red-600">✗ {result.error || 'Execution failed'}</div>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Main Router Dashboard Component
+const RouterDashboard: React.FC<{
+  onTaskSubmit: (task: string) => void;
+  onSessionSelect: (sessionId: string) => void;
+  onManualRoute: (task: string, environment: 'e2b' | 'scrapybara') => void;
+}> = ({ onTaskSubmit, onSessionSelect, onManualRoute }) => {
+  const [currentTask, setCurrentTask] = useState('');
+  const [taskAnalysis, setTaskAnalysis] = useState<TaskAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  const [mamaBarInsights] = useState([
+    'E2B environment is optimal for simple validation tasks',
+    'Consider Scrapybara for tasks requiring browser automation',
+    'Current routing accuracy is above 90% - excellent performance!'
+  ]);
+
+  const handleAnalyze = async (task: string) => {
+    setIsAnalyzing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setTaskAnalysis(mockTaskAnalysis);
+      setIsAnalyzing(false);
+    }, 2000);
+  };
+
+  const handleExecute = (environment?: 'e2b' | 'scrapybara') => {
+    if (taskAnalysis) {
+      onTaskSubmit(currentTask);
+      // Reset analysis after execution
+      setTaskAnalysis(null);
+      setCurrentTask('');
+    }
+  };
+
+  const handleSessionSelect = (sessionId: string) => {
+    setSelectedSession(sessionId);
+    onSessionSelect(sessionId);
+  };
+
+  const selectedSessionData = mockSessions.find(s => s.session_id === selectedSession);
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Intelligent Execution Router</h1>
+            <p className="text-muted-foreground">
+              Autonomous task routing with real-time optimization
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
+              System Healthy
+            </Badge>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Executions</p>
+                  <p className="text-2xl font-bold">{mockMetrics.total_executions}</p>
+                </div>
+                <BarChart3 className="w-8 h-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                  <p className="text-2xl font-bold">{mockMetrics.success_rate}%</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Cost Savings</p>
+                  <p className="text-2xl font-bold">${mockMetrics.cost_savings}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg Response</p>
+                  <p className="text-2xl font-bold">{mockMetrics.performance_stats.avg_response_time}s</p>
+                </div>
+                <Clock className="w-8 h-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Tabs defaultValue="analysis" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="analysis">Task Analysis</TabsTrigger>
+            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="environments">Environments</TabsTrigger>
+            <TabsTrigger value="intelligence">AI Intelligence</TabsTrigger>
+            <TabsTrigger value="controls">Manual Controls</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analysis" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TaskAnalysisPanel
+                task={currentTask}
+                analysis={taskAnalysis}
+                isAnalyzing={isAnalyzing}
+                onAnalyze={handleAnalyze}
+                onExecute={handleExecute}
+              />
+              
+              {selectedSessionData && (
+                <ExecutionResultsViewer
+                  session={selectedSessionData}
+                  result={selectedSessionData.result || null}
+                  onDownloadResults={() => console.log('Download results')}
+                  onShareResults={() => console.log('Share results')}
+                  onRerunTask={() => console.log('Rerun task')}
+                />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sessions" className="space-y-6">
+            <ExecutionSessionMonitor
+              sessions={mockSessions}
+              selectedSession={selectedSession}
+              onSessionSelect={handleSessionSelect}
+              onSessionCancel={(id) => console.log('Cancel session:', id)}
+              onSessionRetry={(id) => console.log('Retry session:', id)}
+            />
+          </TabsContent>
+
+          <TabsContent value="environments" className="space-y-6">
+            <EnvironmentStatusPanel
+              e2bStatus={mockEnvironmentStatus.e2b}
+              scrapybaraStatus={mockEnvironmentStatus.scrapybara}
+              onHealthCheck={(env) => console.log('Health check:', env)}
+              onEnvironmentSettings={(env) => console.log('Settings:', env)}
+            />
+          </TabsContent>
+
+          <TabsContent value="intelligence" className="space-y-6">
+            <RoutingIntelligenceVisualizer
+              currentAnalysis={taskAnalysis}
+              routingHistory={[]}
+              mamaBarInsights={mamaBarInsights}
+              onInsightRequest={() => console.log('Request insights')}
+            />
+          </TabsContent>
+
+          <TabsContent value="controls" className="space-y-6">
+            <ManualRoutingControls
+              onManualRoute={(task, env, reason) => console.log('Manual route:', { task, env, reason })}
+              onBulkRoute={(tasks, env) => console.log('Bulk route:', { tasks, env })}
+              onRoutingRuleCreate={(rule) => console.log('Create rule:', rule)}
+            />
+          </TabsContent>
+
+          <TabsContent value="metrics" className="space-y-6">
+            <CostOptimizationMetrics
+              metrics={mockMetrics}
+              timeRange={timeRange}
+              onTimeRangeChange={(range: any) => setTimeRange(range)}
+              onOptimizationSuggestion={() => console.log('Get optimization suggestions')}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+// Demo Component
+export default function IntelligentExecutionRouterDemo() {
+  const handleTaskSubmit = (task: string) => {
+    console.log('Task submitted:', task);
+  };
+
+  const handleSessionSelect = (sessionId: string) => {
+    console.log('Session selected:', sessionId);
+  };
+
+  const handleManualRoute = (task: string, environment: 'e2b' | 'scrapybara') => {
+    console.log('Manual route:', { task, environment });
+  };
+
+  return (
+    <RouterDashboard
+      onTaskSubmit={handleTaskSubmit}
+      onSessionSelect={handleSessionSelect}
+      onManualRoute={handleManualRoute}
+    />
+  );
+}
+

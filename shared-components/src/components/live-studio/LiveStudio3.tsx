@@ -15,22 +15,15 @@ import {
   Maximize, Minimize, RotateCw, RefreshCw, AlertCircle, CheckCircle,
   Info, HelpCircle, ExternalLink, Link, Eye, EyeOff, Lock, Unlock,
   Shield, Key, Database, Cloud, Wifi, WifiOff, Bluetooth, Battery,
-  Signal, Smartphone, Tablet, Laptop, Desktop, Headphones, Speaker,
-  Printer, Scanner, Keyboard, Mouse, Gamepad2, Joystick, Camera as CameraIcon,
-  Webcam, Microphone, Speaker as SpeakerIcon, Volume1, Volume, VolumeX as VolumeXIcon,
-  Bell, BellOff, Notification, Mail, MailOpen, Inbox, Outbox, Send as SendIcon,
-  Reply, ReplyAll, Forward, Archive, Trash, Spam, Flag, Bookmark,
-  BookmarkCheck, Tag, Tags, Label, Folder, FolderOpen, File, FileText as FileTextIcon,
-  FileImage, FileVideo, FileAudio, FilePdf, FileSpreadsheet, FileCode,
-  FileArchive, FileX, FilePlus, FileMinus, FileEdit, FileCopy, FileMove,
-  FileSearch, FileCheck, FileWarning, FileQuestion, FileInfo, FileDownload,
-  FileUpload, FileImport, FileExport, FileSave, FilePrint, FileShare,
-  FileSync, FileBackup, FileRestore, FileRecovery, FileSecure, FileLock,
-  FileUnlock, FileShield, FileKey, FileDatabase, FileCloud, FileWifi,
-  FileBluetooth, FileBattery, FileSignal, FileSmartphone, FileTablet,
-  FileLaptop, FileDesktop, FileHeadphones, FileSpeaker, FilePrinter,
-  FileScanner, FileKeyboard, FileMouse, FileGamepad, FileJoystick,
-  FileCamera, FileWebcam, FileMicrophone
+  Signal, Smartphone, Tablet, Laptop, Headphones, Speaker,
+  Printer, Scan, Keyboard, Mouse, Gamepad2, Joystick,
+  Webcam, Bell, BellOff, Mail, MailOpen, Inbox, Archive,
+  Reply, ReplyAll, Forward, Trash, AlertTriangle, Flag, Bookmark,
+  BookmarkCheck, Tag, Tags, Folder, FolderOpen, File,
+  FileImage, FileVideo, FileAudio, FileType, FileSpreadsheet, FileCode,
+  FileArchive, FileX, FilePlus, FileMinus, FileEdit,
+  FileSearch, FileCheck, FileWarning, FileQuestion,
+  Import, Save, Share, HardDrive
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";

@@ -477,7 +477,7 @@ interface ScoutUI4Props {
 const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({ 
   reducedMotion = false, 
   neurodivergentMode = false, 
-  theme = 'system',
+  theme: systemTheme = 'system',
   className = ''
 }) => {
   const [currentTheme, setCurrentTheme] = useState(0);
@@ -494,7 +494,7 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isVideoRecording, setIsVideoRecording] = useState(false);
 
-  const theme = themes[currentTheme];
+  const themeConfig = themes[currentTheme];
 
     const files: FileItem[] = [
     {
@@ -655,19 +655,19 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
   };
 
   return (
-    <div className={cn("min-h-screen relative overflow-hidden bg-gradient-to-br", theme.background)}>
+    <div className={cn("min-h-screen relative overflow-hidden bg-gradient-to-br", themeConfig.background)}>
       {/* Particles Background */}
       <Particles
         className="absolute inset-0"
         quantity={60}
-        color={theme.particles}
+        color={themeConfig.particles}
         size={0.6}
       />
 
       {/* Glow Effects */}
       <div className="absolute inset-0 opacity-30">
         <GlowEffect
-          colors={theme.glow}
+          colors={themeConfig.glow}
           mode="rotate"
           blur="strong"
           duration={8}
@@ -700,7 +700,7 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
             transition={{ duration: 0.8 }}
             className="text-center max-w-4xl mx-auto"
           >
-                        <h1 className={cn("text-6xl md:text-8xl font-bold mb-6", theme.accent)}>
+                        <h1 className={cn("text-6xl md:text-8xl font-bold mb-6", themeConfig.accent)}>
               Hey Nathan,
             </h1>
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-8">
@@ -710,15 +710,15 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
             <div className="relative max-w-2xl mx-auto mb-8">
               <div className="relative">
                 <GlowEffect
-                  colors={theme.glow}
+                  colors={themeConfig.glow}
                   mode="pulse"
                   blur="medium"
                   className="rounded-2xl"
                 />
                 <div className="relative bg-background/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <Zap className={cn("h-5 w-5", theme.accent)} />
-                    <span className={cn("font-semibold", theme.accent)}>Fast AF</span>
+                    <Zap className={cn("h-5 w-5", themeConfig.accent)} />
+                    <span className={cn("font-semibold", themeConfig.accent)}>Fast AF</span>
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1" />
                     <Button size="sm" className="rounded-full">
@@ -821,14 +821,14 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
             <div className="mb-6">
               <div className="relative">
                 <GlowEffect
-                  colors={theme.glow}
+                  colors={themeConfig.glow}
                   mode="pulse"
                   blur="medium"
                   className="rounded-xl"
                 />
                 <div className="relative bg-background/90 backdrop-blur-sm rounded-xl border border-border/50 p-4">
                   <div className="flex items-center gap-4">
-                    <Zap className={cn("h-5 w-5", theme.accent)} />
+                    <Zap className={cn("h-5 w-5", themeConfig.accent)} />
                                         <div className="relative flex-1">
                       <Input
                         placeholder="Let Muma-Bear do it for you"
@@ -904,7 +904,7 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
                 style={{ width: `${chatWidth}%` }}
               >
                 <GlowEffect
-                  colors={theme.glow}
+                  colors={themeConfig.glow}
                   mode="static"
                   blur="soft"
                   className="rounded-l-xl"
@@ -1080,7 +1080,7 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
                 style={{ width: `${100 - chatWidth}%` }}
               >
                 <GlowEffect
-                  colors={theme.glow}
+                  colors={themeConfig.glow}
                   mode="static"
                   blur="soft"
                   className="rounded-r-xl"
@@ -1166,7 +1166,7 @@ const MumaBearWorkspace: React.FC<ScoutUI4Props> = ({
               <div className="fixed bottom-0 left-0 right-0 z-50">
                 <div className="relative">
                   <GlowEffect
-                    colors={theme.glow}
+                    colors={themeConfig.glow}
                     mode="pulse"
                     blur="medium"
                     className="rounded-t-xl"

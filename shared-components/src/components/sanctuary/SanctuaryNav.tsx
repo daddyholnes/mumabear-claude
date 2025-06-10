@@ -2,8 +2,15 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import Link from "next/link";
+// import Link from "next/link";
 import { Home, Sparkles, Palette, Headphones, Users, MessageSquare, Settings } from "lucide-react";
+
+// Mock Link component
+const Link = ({ href, children, className, ...props }: any) => (
+  <a href={href} className={className} {...props}>
+    {children}
+  </a>
+);
 
 /**
  * @component SanctuaryNav
@@ -210,7 +217,7 @@ const NavItem: React.FC<{
           ? 'bg-primary/10 text-primary' 
           : 'text-foreground/70 hover:bg-foreground/5 hover:text-foreground'
       }`}
-      onMouseMove={(e) => onMouseMove(e, item.id)}
+      onMouseMove={(e: React.MouseEvent) => onMouseMove(e, item.id)}
       onClick={() => onClick(item.id)}
       role="menuitem"
       aria-current={isActive ? 'page' : undefined}

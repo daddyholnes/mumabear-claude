@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun, Brain, Eye } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 /**
@@ -52,6 +52,7 @@ interface ThemeSwitcherProps {
   onChange?: (theme: ThemeMode) => void;
   defaultValue?: ThemeMode;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export function ThemeSwitcher({
@@ -59,6 +60,7 @@ export function ThemeSwitcher({
   onChange,
   defaultValue = "calm",
   className,
+  children,
 }: ThemeSwitcherProps) {
   const [theme, setTheme] = useState<ThemeMode>(defaultValue);
   const [mounted, setMounted] = useState(false);
@@ -164,12 +166,13 @@ export function ThemeSwitcher({
             className="h-full bg-primary"
             initial={{ width: 0 }}
             animate={{ 
-              width: `${(themes.findIndex(t => t.key === theme) + 1) * (100 / themes.length)}%` 
+              width: `${((themes.findIndex(t => t.key === theme) + 1) * (100 / themes.length))}%` 
             }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           />
         </motion.div>
       </AnimatePresence>
+      {children}
     </div>
   );
 }

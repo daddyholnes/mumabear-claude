@@ -1,0 +1,836 @@
+typescript
+import React, { useState, useEffect, useRef } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Palette, 
+  Monitor, 
+  Moon, 
+  Sun, 
+  Sparkles, 
+  Galaxy,
+  Eye,
+  Volume2,
+  Type,
+  Contrast,
+  MousePointer,
+  Accessibility,
+  Save,
+  RotateCcw,
+  Download,
+  Upload,
+  Check,
+  Settings,
+  Brush,
+  Image,
+  Play
+} from 'lucide-react';
+
+interface ThemeVariant {
+  id: string;
+  name: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+  };
+  icon: React.ReactNode;
+}
+
+interface BackgroundOption {
+  id: string;
+  name: string;
+  type: 'gradient' | 'pattern' | 'animated';
+  value: string;
+  preview: string;
+}
+
+interface AccessibilitySettings {
+  highContrast: boolean;
+  reducedMotion: boolean;
+  fontSize: 'small' | 'medium' | 'large' | 'extra-large';
+  colorBlindSupport: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+  keyboardNavigation: boolean;
+  screenReaderOptimized: boolean;
+}
+
+interface ThemePreferences {
+  selectedTheme: string;
+  selectedBackground: string;
+  customColors: Record<string, string>;
+  accessibility: AccessibilitySettings;
+  animations: {
+    enabled: boolean;
+    speed: number;
+  };
+}
+
+const THEME_VARIANTS: ThemeVariant[] = [
+  {
+    id: 'sanctuary',
+    name: 'Sanctuary Forest',
+    description: 'Calming forest greens with nature-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%)',
+      secondary: 'linear-gradient(135deg, #5D8A6B 0%, #7BA185 100%)',
+      accent: 'linear-gradient(135deg, #8FBC8F 0%, #98FB98 100%)',
+      background: '#F8FDF9',
+      surface: 'rgba(255, 255, 255, 0.95)',
+      text: '#2C3E2F'
+    },
+    icon: <Sparkles className="w-5 h-5" />
+  },
+  {
+    id: 'daytime',
+    name: 'Bright Daytime',
+    description: 'Energizing daylight with sky blues and sunshine yellows',
+    colors: {
+      primary: 'linear-gradient(135deg, #87CEEB 0%, #4FC3F7 100%)',
+      secondary: 'linear-gradient(135deg, #FFE082 0%, #FFF176 100%)',
+      accent: 'linear-gradient(135deg, #81C784 0%, #AED581 100%)',
+      background: '#F0F8FF',
+      surface: 'rgba(255, 255, 255, 0.98)',
+      text: '#1565C0'
+    },
+    icon: <Sun className="w-5 h-5" />
+  },
+  {
+    id: 'night',
+    name: 'Night Mode',
+    description: 'Deep night blues with silver accents for low-light comfort',
+    colors: {
+      primary: 'linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%)',
+      secondary: 'linear-gradient(135deg, #415A77 0%, #778DA9 100%)',
+      accent: 'linear-gradient(135deg, #B0C4DE 0%, #E0E6ED 100%)',
+      background: '#0A0E27',
+      surface: 'rgba(15, 25, 45, 0.95)',
+      text: '#E0E6ED'
+    },
+    icon: <Moon className="w-5 h-5" />
+  },
+  {
+    id: 'purple_haze',
+    name: 'Purple Haze',
+    description: 'Mystical purple gradients with cosmic energy',
+    colors: {
+      primary: 'linear-gradient(135deg, #4A148C 0%, #6A1B9A 100%)',
+      secondary: 'linear-gradient(135deg, #7B1FA2 0%, #8E24AA 100%)',
+      accent: 'linear-gradient(135deg, #CE93D8 0%, #F8BBD9 100%)',
+      background: 'linear-gradient(135deg, #1A0033 0%, #2D1B47 100%)',
+      surface: 'rgba(74, 20, 140, 0.15)',
+      text: '#E1BEE7'
+    },
+    icon: <Sparkles className="w-5 h-5" />
+  },
+  {
+    id: 'cosmic_purple',
+    name: 'Cosmic Purple',
+    description: 'Deep space purples with nebula-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #1A0033 0%, #330066 100%)',
+      secondary: 'linear-gradient(135deg, #4B0082 0%, #663399 100%)',
+      accent: 'linear-gradient(135deg, #9932CC 0%, #DA70D6 100%)',
+      background: 'linear-gradient(135deg, #0A0015 0%, #1A0033 50%, #2D1B47 100%)',
+      surface: 'rgba(75, 0, 130, 0.2)',
+      text: '#DDA0DD'
+    },
+    icon: <Galaxy className="w-5 h-5" />
+  }
+];
+
+const BACKGROUND_OPTIONS: Record<string, BackgroundOption[]> = {
+  sanctuary: [
+    {
+      id: 'forest_gradient',
+      name: 'Forest Gradient',
+      type: 'gradient',
+      value: 'linear-gradient(135deg, #F8FDF9 0%, #E8F5E8 50%, #D4F1D4 100%)',
+      preview: 'linear-gradient(135deg, #F8FDF9 0%, #E8F5E8 50%, #D4F1D4 100%)'
+    },
+    {
+      id: 'nature_pattern',
+      name: 'Nature Pattern',
+      type: 'pattern',
+      value: 'repeating-linear-gradient(45deg, #F8FDF9 0px, #F8FDF9 10px, #E8F5E8 10px, #E8F5E8 20px)',
+      preview: 'repeating-linear-gradient(45deg, #F8FDF9 0px, #F8FDF9 10px, #E8F5E8 10px, #E8F5E8 20px)'
+    }
+  ],
+  daytime: [
+    {
+      id: 'sky_gradient',
+      name: 'Sky Gradient',
+      type: 'gradient',
+      value: 'linear-gradient(to bottom, #87CEEB 0%, #F0F8FF 50%, #FFF8DC 100%)',
+      preview: 'linear-gradient(to bottom, #87CEEB 0%, #F0F8FF 50%, #FFF8DC 100%)'
+    },
+    {
+      id: 'cloud_pattern',
+      name: 'Cloud Pattern',
+      type: 'animated',
+      value: 'radial-gradient(circle at 20% 50%, white 20%, transparent 21%), radial-gradient(circle at 70% 20%, white 15%, transparent 16%)',
+      preview: 'radial-gradient(circle at 20% 50%, white 20%, transparent 21%), radial-gradient(circle at 70% 20%, white 15%, transparent 16%)'
+    }
+  ],
+  night: [
+    {
+      id: 'starfield',
+      name: 'Starfield',
+      type: 'animated',
+      value: 'radial-gradient(2px 2px at 20px 30px, #eee, transparent), radial-gradient(2px 2px at 40px 70px, white, transparent)',
+      preview: 'radial-gradient(2px 2px at 20px 30px, #eee, transparent), radial-gradient(2px 2px at 40px 70px, white, transparent)'
+    },
+    {
+      id: 'deep_night',
+      name: 'Deep Night',
+      type: 'gradient',
+      value: 'linear-gradient(to bottom, #0A0E27 0%, #1B263B 50%, #0D1B2A 100%)',
+      preview: 'linear-gradient(to bottom, #0A0E27 0%, #1B263B 50%, #0D1B2A 100%)'
+    }
+  ],
+  purple_haze: [
+    {
+      id: 'purple_mist',
+      name: 'Purple Mist',
+      type: 'animated',
+      value: 'linear-gradient(45deg, #1A0033 0%, #4A148C 25%, #7B1FA2 50%, #4A148C 75%, #1A0033 100%)',
+      preview: 'linear-gradient(45deg, #1A0033 0%, #4A148C 25%, #7B1FA2 50%, #4A148C 75%, #1A0033 100%)'
+    },
+    {
+      id: 'haze_gradient',
+      name: 'Haze Gradient',
+      type: 'gradient',
+      value: 'linear-gradient(45deg, #1A0033 0%, #4A148C 25%, #7B1FA2 50%, #4A148C 75%, #1A0033 100%)',
+      preview: 'linear-gradient(45deg, #1A0033 0%, #4A148C 25%, #7B1FA2 50%, #4A148C 75%, #1A0033 100%)'
+    }
+  ],
+  cosmic_purple: [
+    {
+      id: 'nebula',
+      name: 'Cosmic Nebula',
+      type: 'animated',
+      value: 'radial-gradient(ellipse at center, #330066 0%, #1A0033 50%, #0A0015 100%)',
+      preview: 'radial-gradient(ellipse at center, #330066 0%, #1A0033 50%, #0A0015 100%)'
+    },
+    {
+      id: 'deep_space',
+      name: 'Deep Space',
+      type: 'gradient',
+      value: 'radial-gradient(ellipse at center, #330066 0%, #1A0033 50%, #0A0015 100%)',
+      preview: 'radial-gradient(ellipse at center, #330066 0%, #1A0033 50%, #0A0015 100%)'
+    }
+  ]
+};
+
+const ThemePreviewCard: React.FC<{
+  theme: ThemeVariant;
+  isSelected: boolean;
+  onSelect: () => void;
+}> = ({ theme, isSelected, onSelect }) => {
+  return (
+    <Card 
+      className={`relative cursor-pointer transition-all duration-300 hover:scale-105 ${
+        isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'
+      }`}
+      onClick={onSelect}
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50">
+            {theme.icon}
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">{theme.name}</h3>
+            <p className="text-xs text-muted-foreground">{theme.description}</p>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex gap-1">
+            <div 
+              className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+              style={{ background: theme.colors.primary }}
+            />
+            <div 
+              className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+              style={{ background: theme.colors.secondary }}
+            />
+            <div 
+              className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+              style={{ background: theme.colors.accent }}
+            />
+          </div>
+          
+          <div className="text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Background:</span>
+              <div 
+                className="w-4 h-4 rounded border"
+                style={{ background: theme.colors.background }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {isSelected && (
+          <div className="absolute top-2 right-2">
+            <Badge variant="default" className="bg-blue-500">
+              <Check className="w-3 h-3" />
+            </Badge>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+const BackgroundSelector: React.FC<{
+  themeId: string;
+  selectedBackground: string;
+  onBackgroundChange: (backgroundId: string) => void;
+}> = ({ themeId, selectedBackground, onBackgroundChange }) => {
+  const backgrounds = BACKGROUND_OPTIONS[themeId] || [];
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Image className="w-4 h-4" />
+        <Label className="text-sm font-medium">Background Style</Label>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-3">
+        {backgrounds.map((bg) => (
+          <Card 
+            key={bg.id}
+            className={`cursor-pointer transition-all duration-200 ${
+              selectedBackground === bg.id ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
+            }`}
+            onClick={() => onBackgroundChange(bg.id)}
+          >
+            <div className="p-3">
+              <div 
+                className="w-full h-16 rounded-md border mb-2"
+                style={{ background: bg.preview }}
+              />
+              <div className="text-xs">
+                <div className="font-medium">{bg.name}</div>
+                <div className="text-muted-foreground capitalize">{bg.type}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AccessibilityPanel: React.FC<{
+  settings: AccessibilitySettings;
+  onSettingChange: (key: keyof AccessibilitySettings, value: any) => void;
+}> = ({ settings, onSettingChange }) => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Accessibility className="w-4 h-4" />
+        <Label className="text-sm font-medium">Accessibility Settings</Label>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-sm">High Contrast</Label>
+            <p className="text-xs text-muted-foreground">Increase contrast for better visibility</p>
+          </div>
+          <Switch 
+            checked={settings.highContrast}
+            onCheckedChange={(checked) => onSettingChange('highContrast', checked)}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-sm">Reduced Motion</Label>
+            <p className="text-xs text-muted-foreground">Minimize animations and transitions</p>
+          </div>
+          <Switch 
+            checked={settings.reducedMotion}
+            onCheckedChange={(checked) => onSettingChange('reducedMotion', checked)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="text-sm">Font Size</Label>
+          <Select 
+            value={settings.fontSize} 
+            onValueChange={(value) => onSettingChange('fontSize', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="small">Small</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="large">Large</SelectItem>
+              <SelectItem value="extra-large">Extra Large</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="text-sm">Color Blind Support</Label>
+          <Select 
+            value={settings.colorBlindSupport} 
+            onValueChange={(value) => onSettingChange('colorBlindSupport', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="protanopia">Protanopia</SelectItem>
+              <SelectItem value="deuteranopia">Deuteranopia</SelectItem>
+              <SelectItem value="tritanopia">Tritanopia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-sm">Keyboard Navigation</Label>
+            <p className="text-xs text-muted-foreground">Enhanced keyboard support</p>
+          </div>
+          <Switch 
+            checked={settings.keyboardNavigation}
+            onCheckedChange={(checked) => onSettingChange('keyboardNavigation', checked)}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-sm">Screen Reader Optimized</Label>
+            <p className="text-xs text-muted-foreground">Optimize for screen readers</p>
+          </div>
+          <Switch 
+            checked={settings.screenReaderOptimized}
+            onCheckedChange={(checked) => onSettingChange('screenReaderOptimized', checked)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LivePreviewPanel: React.FC<{
+  selectedTheme: ThemeVariant;
+  selectedBackground: string;
+  accessibility: AccessibilitySettings;
+}> = ({ selectedTheme, selectedBackground, accessibility }) => {
+  const backgroundStyle = selectedBackground && BACKGROUND_OPTIONS[selectedTheme.id] 
+    ? BACKGROUND_OPTIONS[selectedTheme.id].find(bg => bg.id === selectedBackground)?.value 
+    : selectedTheme.colors.background;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Eye className="w-4 h-4" />
+        <Label className="text-sm font-medium">Live Preview</Label>
+      </div>
+      
+      <Card className="overflow-hidden">
+        <div 
+          className="p-4 min-h-[200px]"
+          style={{ 
+            background: backgroundStyle,
+            color: selectedTheme.colors.text,
+            fontSize: accessibility.fontSize === 'small' ? '12px' : 
+                     accessibility.fontSize === 'large' ? '16px' :
+                     accessibility.fontSize === 'extra-large' ? '18px' : '14px'
+          }}
+        >
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-8 h-8 rounded-full"
+                style={{ background: selectedTheme.colors.primary }}
+              />
+              <div>
+                <div className="font-semibold">Sample Navigation</div>
+                <div className="text-xs opacity-75">Theme preview</div>
+              </div>
+            </div>
+            
+            <div 
+              className="p-3 rounded-lg"
+              style={{ background: selectedTheme.colors.surface }}
+            >
+              <div className="font-medium mb-2">Sample Card</div>
+              <div className="text-sm opacity-75 mb-3">
+                This is how your content will look with the selected theme.
+              </div>
+              <div className="flex gap-2">
+                <div 
+                  className="px-3 py-1 rounded text-xs text-white"
+                  style={{ background: selectedTheme.colors.primary }}
+                >
+                  Primary Button
+                </div>
+                <div 
+                  className="px-3 py-1 rounded text-xs text-white"
+                  style={{ background: selectedTheme.colors.secondary }}
+                >
+                  Secondary
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              {['Sample', 'Tags', 'Here'].map((tag, i) => (
+                <Badge 
+                  key={i}
+                  variant="outline" 
+                  style={{ 
+                    borderColor: selectedTheme.colors.accent,
+                    color: selectedTheme.colors.text 
+                  }}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const ThemeCustomization: React.FC = () => {
+  const [preferences, setPreferences] = useState<ThemePreferences>({
+    selectedTheme: 'sanctuary',
+    selectedBackground: 'forest_gradient',
+    customColors: {},
+    accessibility: {
+      highContrast: false,
+      reducedMotion: false,
+      fontSize: 'medium',
+      colorBlindSupport: 'none',
+      keyboardNavigation: true,
+      screenReaderOptimized: false
+    },
+    animations: {
+      enabled: true,
+      speed: 1
+    }
+  });
+
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  const selectedTheme = THEME_VARIANTS.find(t => t.id === preferences.selectedTheme) || THEME_VARIANTS[0];
+
+  const handleThemeChange = (themeId: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      selectedTheme: themeId,
+      selectedBackground: BACKGROUND_OPTIONS[themeId]?.[0]?.id || ''
+    }));
+  };
+
+  const handleBackgroundChange = (backgroundId: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      selectedBackground: backgroundId
+    }));
+  };
+
+  const handleAccessibilityChange = (key: keyof AccessibilitySettings, value: any) => {
+    setPreferences(prev => ({
+      ...prev,
+      accessibility: {
+        ...prev.accessibility,
+        [key]: value
+      }
+    }));
+  };
+
+  const handleAnimationSpeedChange = (speed: number[]) => {
+    setPreferences(prev => ({
+      ...prev,
+      animations: {
+        ...prev.animations,
+        speed: speed[0]
+      }
+    }));
+  };
+
+  const handleSave = () => {
+    // Save preferences to localStorage or API
+    localStorage.setItem('sanctuary_theme_prefs', JSON.stringify(preferences));
+    console.log('Theme preferences saved:', preferences);
+  };
+
+  const handleReset = () => {
+    setPreferences({
+      selectedTheme: 'sanctuary',
+      selectedBackground: 'forest_gradient',
+      customColors: {},
+      accessibility: {
+        highContrast: false,
+        reducedMotion: false,
+        fontSize: 'medium',
+        colorBlindSupport: 'none',
+        keyboardNavigation: true,
+        screenReaderOptimized: false
+      },
+      animations: {
+        enabled: true,
+        speed: 1
+      }
+    });
+  };
+
+  const handleExport = () => {
+    const dataStr = JSON.stringify(preferences, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sanctuary-theme-preferences.json';
+    link.click();
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target?.result as string);
+          setPreferences(imported);
+        } catch (error) {
+          console.error('Failed to import preferences:', error);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <Palette className="w-8 h-8" />
+                Theme Customization
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Customize your Sanctuary experience with themes, backgrounds, and accessibility options
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleReset}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              <label>
+                <Button variant="outline" asChild>
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import
+                  </span>
+                </Button>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+              <Button onClick={handleSave}>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="themes" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="themes">Themes</TabsTrigger>
+                <TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
+                <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
+                <TabsTrigger value="animations">Animations</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="themes" className="space-y-6">
+                <Card>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Brush className="w-4 h-4" />
+                      <Label className="text-lg font-semibold">Choose Your Theme</Label>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {THEME_VARIANTS.map((theme) => (
+                        <ThemePreviewCard
+                          key={theme.id}
+                          theme={theme}
+                          isSelected={preferences.selectedTheme === theme.id}
+                          onSelect={() => handleThemeChange(theme.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="backgrounds" className="space-y-6">
+                <Card>
+                  <div className="p-6">
+                    <BackgroundSelector
+                      themeId={preferences.selectedTheme}
+                      selectedBackground={preferences.selectedBackground}
+                      onBackgroundChange={handleBackgroundChange}
+                    />
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="accessibility" className="space-y-6">
+                <Card>
+                  <div className="p-6">
+                    <AccessibilityPanel
+                      settings={preferences.accessibility}
+                      onSettingChange={handleAccessibilityChange}
+                    />
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="animations" className="space-y-6">
+                <Card>
+                  <div className="p-6 space-y-6">
+                    <div className="flex items-center gap-2">
+                      <Play className="w-4 h-4" />
+                      <Label className="text-lg font-semibold">Animation Settings</Label>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label className="text-sm">Enable Animations</Label>
+                          <p className="text-xs text-muted-foreground">Turn on/off all animations</p>
+                        </div>
+                        <Switch 
+                          checked={preferences.animations.enabled}
+                          onCheckedChange={(checked) => 
+                            setPreferences(prev => ({
+                              ...prev,
+                              animations: { ...prev.animations, enabled: checked }
+                            }))
+                          }
+                        />
+                      </div>
+                      
+                      {preferences.animations.enabled && (
+                        <div className="space-y-2">
+                          <Label className="text-sm">Animation Speed</Label>
+                          <div className="px-3">
+                            <Slider
+                              value={[preferences.animations.speed]}
+                              onValueChange={handleAnimationSpeedChange}
+                              max={2}
+                              min={0.5}
+                              step={0.1}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                              <span>Slow</span>
+                              <span>Normal</span>
+                              <span>Fast</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <div className="p-6">
+                <LivePreviewPanel
+                  selectedTheme={selectedTheme}
+                  selectedBackground={preferences.selectedBackground}
+                  accessibility={preferences.accessibility}
+                />
+              </div>
+            </Card>
+
+            <Card>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Settings className="w-4 h-4" />
+                  <Label className="text-sm font-medium">Quick Settings</Label>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Preview Mode</span>
+                    <Switch 
+                      checked={isPreviewMode}
+                      onCheckedChange={setIsPreviewMode}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Current Theme:</span>
+                      <span className="font-medium">{selectedTheme.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Font Size:</span>
+                      <span className="font-medium capitalize">{preferences.accessibility.fontSize}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Animations:</span>
+                      <span className="font-medium">
+                        {preferences.animations.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ThemeCustomization;

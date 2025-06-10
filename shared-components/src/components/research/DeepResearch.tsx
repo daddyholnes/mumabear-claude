@@ -535,7 +535,7 @@ interface DeepResearchProps {
 const AIDeepResearchPage: React.FC<DeepResearchProps> = ({ 
   reducedMotion = false, 
   neurodivergentMode = false, 
-  theme = 'system',
+  theme: systemTheme = 'system',
   className = ''
 }) => {
   const [theme, setTheme] = useState<Theme>("nighttime");

@@ -1,0 +1,965 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bot,
+  Brain,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Eye,
+  GitBranch,
+  Layers,
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  Zap,
+  TrendingUp,
+  Users,
+  Server,
+  Database,
+  Cpu,
+  MemoryStick,
+  Network,
+  Shield,
+  Target,
+  Lightbulb,
+  Download,
+  Share2,
+  RefreshCw,
+  X,
+  ChevronRight,
+  ChevronDown,
+  Filter,
+  Search,
+  Calendar,
+  MapPin,
+  ExternalLink,
+  Info,
+  Plus,
+  Minus,
+  ArrowUp,
+  ArrowDown,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Types
+interface TaskAnalysis {
+  task_id: string;
+  complexity_score: number;
+  estimated_duration: number;
+  resource_requirements: {
+    cpu: number;
+    memory: number;
+    storage: number;
+  };
+  recommended_environment: 'e2b' | 'scrapybara';
+  confidence_level: number;
+  analysis_factors: string[];
+  routing_reason: string;
+}
+
+interface ExecutionSession {
+  session_id: string;
+  task_description: string;
+  environment: 'e2b' | 'scrapybara';
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+  start_time: string;
+  end_time?: string;
+  duration?: number;
+  resource_usage: {
+    cpu_percent: number;
+    memory_mb: number;
+    storage_mb: number;
+  };
+  cost_estimate: number;
+  progress?: number;
+}
+
+interface RouterMetrics {
+  total_executions: number;
+  success_rate: number;
+  average_cost_per_execution: number;
+  environment_distribution: {
+    e2b_percentage: number;
+    scrapybara_percentage: number;
+  };
+  cost_savings: number;
+  routing_accuracy: number;
+}
+
+interface EnvironmentStatus {
+  name: string;
+  status: 'healthy' | 'warning' | 'error';
+  response_time: number;
+  queue_length: number;
+  capacity_utilization: number;
+  error_rate: number;
+}
+
+// Mama Bear Avatar Component
+const MamaBearAvatar = ({ size = "md", isThinking = false }: { size?: "sm" | "md" | "lg"; isThinking?: boolean }) => {
+  const sizeClasses = {
+    sm: "w-8 h-8",
+    md: "w-12 h-12",
+    lg: "w-16 h-16"
+  };
+
+  return (
+    <div className={`${sizeClasses[size]} relative`}>
+      <Avatar className={sizeClasses[size]}>
+        <AvatarImage src="/mama-bear.png" alt="Mama Bear" />
+        <AvatarFallback className="bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800">
+          🐻
+        </AvatarFallback>
+      </Avatar>
+      {isThinking && (
+        <motion.div
+          className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Complexity Meter Component
+const ComplexityMeter = ({ score, className }: { score: number; className?: string }) => {
+  const getColor = (score: number) => {
+    if (score <= 3) return "bg-green-500";
+    if (score <= 6) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const getLabel = (score: number) => {
+    if (score <= 3) return "Simple";
+    if (score <= 6) return "Moderate";
+    return "Complex";
+  };
+
+  return (
+    <div className={`space-y-2 ${className}`}>
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-medium">Complexity</span>
+        <span className="text-sm text-muted-foreground">{score}/10</span>
+      </div>
+      <div className="w-full bg-muted rounded-full h-2">
+        <div
+          className={`h-2 rounded-full transition-all duration-500 ${getColor(score)}`}
+          style={{ width: `${(score / 10) * 100}%` }}
+        />
+      </div>
+      <div className="text-xs text-center text-muted-foreground">
+        {getLabel(score)}
+      </div>
+    </div>
+  );
+};
+
+// Environment Badge Component
+const EnvironmentBadge = ({ environment, status }: { environment: 'e2b' | 'scrapybara'; status?: string }) => {
+  const colors = {
+    e2b: "bg-blue-100 text-blue-800 border-blue-200",
+    scrapybara: "bg-orange-100 text-orange-800 border-orange-200"
+  };
+
+  return (
+    <Badge variant="outline" className={colors[environment]}>
+      {environment === 'e2b' ? 'E2B' : 'Scrapybara'}
+      {status && <span className="ml-1">• {status}</span>}
+    </Badge>
+  );
+};
+
+// Cost Indicator Component
+const CostIndicator = ({ cost, savings }: { cost: number; savings?: number }) => {
+  return (
+    <div className="flex items-center gap-2">
+      <DollarSign className="w-4 h-4 text-green-600" />
+      <span className="font-medium">${cost.toFixed(3)}</span>
+      {savings && savings > 0 && (
+        <Badge variant="secondary" className="bg-green-100 text-green-700">
+          -{savings}% saved
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+// Session Card Component
+const SessionCard = ({ 
+  session, 
+  isSelected, 
+  onClick, 
+  onCancel, 
+  onRetry 
+}: { 
+  session: ExecutionSession; 
+  isSelected: boolean; 
+  onClick: () => void;
+  onCancel: () => void;
+  onRetry: () => void;
+}) => {
+  const statusColors = {
+    queued: "bg-gray-100 text-gray-800",
+    running: "bg-blue-100 text-blue-800",
+    completed: "bg-green-100 text-green-800",
+    failed: "bg-red-100 text-red-800",
+    cancelled: "bg-yellow-100 text-yellow-800"
+  };
+
+  const statusIcons = {
+    queued: Clock,
+    running: Play,
+    completed: CheckCircle2,
+    failed: AlertTriangle,
+    cancelled: X
+  };
+
+  const StatusIcon = statusIcons[session.status];
+
+  return (
+    <Card 
+      className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+        isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+      }`}
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <StatusIcon className="w-4 h-4" />
+            <Badge className={statusColors[session.status]}>
+              {session.status}
+            </Badge>
+          </div>
+          <EnvironmentBadge environment={session.environment} />
+        </div>
+        
+        <h4 className="font-medium text-sm mb-2 line-clamp-2">
+          {session.task_description}
+        </h4>
+        
+        <div className="space-y-2">
+          {session.status === 'running' && session.progress && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>Progress</span>
+                <span>{session.progress}%</span>
+              </div>
+              <Progress value={session.progress} className="h-1" />
+            </div>
+          )}
+          
+          <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <span>{new Date(session.start_time).toLocaleTimeString()}</span>
+            <CostIndicator cost={session.cost_estimate} />
+          </div>
+        </div>
+
+        {(session.status === 'failed' || session.status === 'cancelled') && (
+          <div className="flex gap-2 mt-3">
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onRetry(); }}>
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Task Analysis Panel
+const TaskAnalysisPanel = ({ 
+  task, 
+  analysis, 
+  isAnalyzing, 
+  onAnalyze, 
+  onExecute 
+}: {
+  task: string;
+  analysis: TaskAnalysis | null;
+  isAnalyzing: boolean;
+  onAnalyze: (task: string) => void;
+  onExecute: (environment?: 'e2b' | 'scrapybara') => void;
+}) => {
+  const [currentTask, setCurrentTask] = useState(task);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-purple-600" />
+          Task Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="task-input">Task Description</Label>
+          <Textarea
+            id="task-input"
+            placeholder="Describe the task you want to execute..."
+            value={currentTask}
+            onChange={(e) => setCurrentTask(e.target.value)}
+            className="min-h-[100px]"
+          />
+        </div>
+
+        <Button 
+          onClick={() => onAnalyze(currentTask)} 
+          disabled={!currentTask.trim() || isAnalyzing}
+          className="w-full"
+        >
+          {isAnalyzing ? (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Zap className="w-4 h-4 mr-2" />
+              Analyze Task
+            </>
+          )}
+        </Button>
+
+        {analysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4 p-4 bg-muted/50 rounded-lg"
+          >
+            <div className="flex items-start gap-3">
+              <MamaBearAvatar size="sm" />
+              <div className="flex-1 space-y-3">
+                <ComplexityMeter score={analysis.complexity_score} />
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Duration:</span>
+                    <div className="font-medium">{analysis.estimated_duration}s</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Confidence:</span>
+                    <div className="font-medium">{(analysis.confidence_level * 100).toFixed(0)}%</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Recommended Environment:</div>
+                  <EnvironmentBadge environment={analysis.recommended_environment} />
+                  <p className="text-sm text-muted-foreground">{analysis.routing_reason}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Analysis Factors:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {analysis.analysis_factors.map((factor, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {factor}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={() => onExecute()} className="flex-1">
+                    Execute (Recommended)
+                  </Button>
+                  <Select onValueChange={(env) => onExecute(env as 'e2b' | 'scrapybara')}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Override" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="e2b">Force E2B</SelectItem>
+                      <SelectItem value="scrapybara">Force Scrapybara</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Execution Session Monitor
+const ExecutionSessionMonitor = ({ 
+  sessions, 
+  selectedSession, 
+  onSessionSelect, 
+  onSessionCancel 
+}: {
+  sessions: ExecutionSession[];
+  selectedSession: string | null;
+  onSessionSelect: (sessionId: string) => void;
+  onSessionCancel: (sessionId: string) => void;
+}) => {
+  const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredSessions = sessions.filter(session => {
+    const matchesFilter = filter === 'all' || session.status === filter;
+    const matchesSearch = session.task_description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-blue-600" />
+          Execution Sessions
+        </CardTitle>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search sessions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="running">Running</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[400px]">
+          <div className="space-y-3">
+            {filteredSessions.map((session) => (
+              <SessionCard
+                key={session.session_id}
+                session={session}
+                isSelected={selectedSession === session.session_id}
+                onClick={() => onSessionSelect(session.session_id)}
+                onCancel={() => onSessionCancel(session.session_id)}
+                onRetry={() => {}}
+              />
+            ))}
+            {filteredSessions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No sessions found
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Environment Status Panel
+const EnvironmentStatusPanel = ({ 
+  e2bStatus, 
+  scrapybaraStatus 
+}: {
+  e2bStatus: EnvironmentStatus;
+  scrapybaraStatus: EnvironmentStatus;
+}) => {
+  const StatusCard = ({ env }: { env: EnvironmentStatus }) => {
+    const statusColors = {
+      healthy: "text-green-600 bg-green-100",
+      warning: "text-yellow-600 bg-yellow-100",
+      error: "text-red-600 bg-red-100"
+    };
+
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium">{env.name}</h3>
+            <Badge className={statusColors[env.status]}>
+              {env.status}
+            </Badge>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Capacity</span>
+                <span>{env.capacity_utilization}%</span>
+              </div>
+              <Progress value={env.capacity_utilization} className="h-2" />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Response Time</span>
+                <div className="font-medium">{env.response_time}ms</div>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Queue Length</span>
+                <div className="font-medium">{env.queue_length}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Error Rate</span>
+              <span className={env.error_rate > 5 ? 'text-red-600' : 'text-green-600'}>
+                {env.error_rate}%
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Server className="w-5 h-5 text-green-600" />
+          Environment Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <StatusCard env={e2bStatus} />
+          <StatusCard env={scrapybaraStatus} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Cost Optimization Metrics
+const CostOptimizationMetrics = ({ 
+  metrics, 
+  timeRange, 
+  onTimeRangeChange 
+}: {
+  metrics: RouterMetrics;
+  timeRange: string;
+  onTimeRangeChange: (range: string) => void;
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-green-600" />
+            Cost Optimization
+          </CardTitle>
+          <Select value={timeRange} onValueChange={onTimeRangeChange}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1h">1h</SelectItem>
+              <SelectItem value="24h">24h</SelectItem>
+              <SelectItem value="7d">7d</SelectItem>
+              <SelectItem value="30d">30d</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              ${metrics.cost_savings.toFixed(2)}
+            </div>
+            <div className="text-sm text-muted-foreground">Total Savings</div>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">
+              {metrics.routing_accuracy.toFixed(1)}%
+            </div>
+            <div className="text-sm text-muted-foreground">Routing Accuracy</div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span>E2B Usage</span>
+              <span>{metrics.environment_distribution.e2b_percentage}%</span>
+            </div>
+            <Progress value={metrics.environment_distribution.e2b_percentage} className="h-2" />
+          </div>
+          
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span>Scrapybara Usage</span>
+              <span>{metrics.environment_distribution.scrapybara_percentage}%</span>
+            </div>
+            <Progress value={metrics.environment_distribution.scrapybara_percentage} className="h-2" />
+          </div>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Total Executions</span>
+            <div className="font-medium">{metrics.total_executions}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Success Rate</span>
+            <div className="font-medium">{metrics.success_rate.toFixed(1)}%</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Avg Cost</span>
+            <div className="font-medium">${metrics.average_cost_per_execution.toFixed(3)}</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Routing Intelligence Visualizer
+const RoutingIntelligenceVisualizer = ({ 
+  currentAnalysis, 
+  insights 
+}: {
+  currentAnalysis: TaskAnalysis | null;
+  insights: string[];
+}) => {
+  const [currentInsight, setCurrentInsight] = useState(0);
+
+  useEffect(() => {
+    if (insights.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentInsight((prev) => (prev + 1) % insights.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [insights.length]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-yellow-600" />
+          Mama Bear Insights
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-start gap-3">
+          <MamaBearAvatar size="md" isThinking={!!currentAnalysis} />
+          <div className="flex-1 space-y-3">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentInsight}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="p-3 bg-amber-50 rounded-lg border border-amber-200"
+              >
+                <p className="text-sm text-amber-800">
+                  {insights[currentInsight] || "I'm analyzing your tasks to provide better routing recommendations..."}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            {currentAnalysis && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Current Analysis</h4>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4" />
+                    <span className="text-sm font-medium">Routing Decision</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {currentAnalysis.routing_reason}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {insights.length > 1 && (
+              <div className="flex justify-center gap-1">
+                {insights.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentInsight ? 'bg-amber-600' : 'bg-amber-200'
+                    }`}
+                    onClick={() => setCurrentInsight(index)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Main Router Dashboard
+const RouterDashboard = () => {
+  const [currentTask, setCurrentTask] = useState("");
+  const [taskAnalysis, setTaskAnalysis] = useState<TaskAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeSessions, setActiveSessions] = useState<ExecutionSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState("24h");
+
+  // Mock data
+  const mockMetrics: RouterMetrics = {
+    total_executions: 1247,
+    success_rate: 94.2,
+    average_cost_per_execution: 0.045,
+    environment_distribution: {
+      e2b_percentage: 68,
+      scrapybara_percentage: 32
+    },
+    cost_savings: 127.45,
+    routing_accuracy: 91.8
+  };
+
+  const mockE2BStatus: EnvironmentStatus = {
+    name: "E2B",
+    status: "healthy",
+    response_time: 245,
+    queue_length: 3,
+    capacity_utilization: 67,
+    error_rate: 1.2
+  };
+
+  const mockScrapybaraStatus: EnvironmentStatus = {
+    name: "Scrapybara",
+    status: "healthy",
+    response_time: 1200,
+    queue_length: 8,
+    capacity_utilization: 45,
+    error_rate: 2.8
+  };
+
+  const mockSessions: ExecutionSession[] = [
+    {
+      session_id: "sess_001",
+      task_description: "Scrape product data from e-commerce website with pagination",
+      environment: "scrapybara",
+      status: "running",
+      start_time: new Date(Date.now() - 300000).toISOString(),
+      resource_usage: { cpu_percent: 45, memory_mb: 512, storage_mb: 128 },
+      cost_estimate: 0.089,
+      progress: 67
+    },
+    {
+      session_id: "sess_002",
+      task_description: "Simple API endpoint validation and response testing",
+      environment: "e2b",
+      status: "completed",
+      start_time: new Date(Date.now() - 600000).toISOString(),
+      end_time: new Date(Date.now() - 480000).toISOString(),
+      duration: 120,
+      resource_usage: { cpu_percent: 23, memory_mb: 256, storage_mb: 64 },
+      cost_estimate: 0.012
+    },
+    {
+      session_id: "sess_003",
+      task_description: "Complex data processing with machine learning inference",
+      environment: "scrapybara",
+      status: "failed",
+      start_time: new Date(Date.now() - 900000).toISOString(),
+      end_time: new Date(Date.now() - 780000).toISOString(),
+      resource_usage: { cpu_percent: 89, memory_mb: 1024, storage_mb: 256 },
+      cost_estimate: 0.156
+    }
+  ];
+
+  const insights = [
+    "Based on recent patterns, I recommend using E2B for API testing tasks - they complete 40% faster!",
+    "Your complex scraping tasks have a 95% success rate on Scrapybara. Great job optimizing those workflows!",
+    "I've noticed you could save ~$15/month by letting me auto-route your validation tasks to E2B.",
+    "Pro tip: Tasks with 'simple' or 'test' keywords are perfect candidates for E2B routing."
+  ];
+
+  const handleAnalyze = async (task: string) => {
+    setIsAnalyzing(true);
+    setCurrentTask(task);
+    
+    // Simulate API call
+    setTimeout(() => {
+      const mockAnalysis: TaskAnalysis = {
+        task_id: `task_${Date.now()}`,
+        complexity_score: task.toLowerCase().includes('complex') ? 8 : 
+                         task.toLowerCase().includes('simple') ? 3 : 5,
+        estimated_duration: task.length > 100 ? 300 : 120,
+        resource_requirements: {
+          cpu: task.toLowerCase().includes('ml') ? 80 : 40,
+          memory: task.toLowerCase().includes('data') ? 1024 : 512,
+          storage: 256
+        },
+        recommended_environment: task.toLowerCase().includes('scrape') || 
+                                task.toLowerCase().includes('complex') ? 'scrapybara' : 'e2b',
+        confidence_level: 0.87,
+        analysis_factors: [
+          task.toLowerCase().includes('scrape') ? 'Web Scraping' : 'API Testing',
+          task.length > 50 ? 'Complex Description' : 'Simple Task',
+          'Resource Optimization',
+          'Cost Efficiency'
+        ],
+        routing_reason: task.toLowerCase().includes('scrape') ? 
+          'This task requires full browser automation and complex DOM interaction, making Scrapybara the optimal choice.' :
+          'This appears to be a lightweight task that can be efficiently handled by E2B\'s fast execution environment.'
+      };
+      
+      setTaskAnalysis(mockAnalysis);
+      setIsAnalyzing(false);
+    }, 2000);
+  };
+
+  const handleExecute = (environment?: 'e2b' | 'scrapybara') => {
+    if (!taskAnalysis) return;
+    
+    const newSession: ExecutionSession = {
+      session_id: `sess_${Date.now()}`,
+      task_description: currentTask,
+      environment: environment || taskAnalysis.recommended_environment,
+      status: 'queued',
+      start_time: new Date().toISOString(),
+      resource_usage: { cpu_percent: 0, memory_mb: 0, storage_mb: 0 },
+      cost_estimate: taskAnalysis.estimated_duration * 0.0003,
+      progress: 0
+    };
+    
+    setActiveSessions(prev => [newSession, ...prev]);
+    setSelectedSession(newSession.session_id);
+    
+    // Simulate session progression
+    setTimeout(() => {
+      setActiveSessions(prev => prev.map(s => 
+        s.session_id === newSession.session_id 
+          ? { ...s, status: 'running' as const, progress: 25 }
+          : s
+      ));
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Intelligent Execution Router</h1>
+            <p className="text-muted-foreground">AI-powered task routing between E2B and Scrapybara environments</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="bg-green-100 text-green-800">
+              Router Active
+            </Badge>
+            <MamaBearAvatar size="lg" />
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="analysis">Task Analysis</TabsTrigger>
+            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <TaskAnalysisPanel
+                  task={currentTask}
+                  analysis={taskAnalysis}
+                  isAnalyzing={isAnalyzing}
+                  onAnalyze={handleAnalyze}
+                  onExecute={handleExecute}
+                />
+                <ExecutionSessionMonitor
+                  sessions={mockSessions}
+                  selectedSession={selectedSession}
+                  onSessionSelect={setSelectedSession}
+                  onSessionCancel={(id) => {}}
+                />
+              </div>
+              
+              <div className="space-y-6">
+                <EnvironmentStatusPanel
+                  e2bStatus={mockE2BStatus}
+                  scrapybaraStatus={mockScrapybaraStatus}
+                />
+                <CostOptimizationMetrics
+                  metrics={mockMetrics}
+                  timeRange={timeRange}
+                  onTimeRangeChange={setTimeRange}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analysis">
+            <TaskAnalysisPanel
+              task={currentTask}
+              analysis={taskAnalysis}
+              isAnalyzing={isAnalyzing}
+              onAnalyze={handleAnalyze}
+              onExecute={handleExecute}
+            />
+          </TabsContent>
+
+          <TabsContent value="sessions">
+            <ExecutionSessionMonitor
+              sessions={mockSessions}
+              selectedSession={selectedSession}
+              onSessionSelect={setSelectedSession}
+              onSessionCancel={(id) => {}}
+            />
+          </TabsContent>
+
+          <TabsContent value="insights">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <RoutingIntelligenceVisualizer
+                currentAnalysis={taskAnalysis}
+                insights={insights}
+              />
+              <CostOptimizationMetrics
+                metrics={mockMetrics}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default RouterDashboard;

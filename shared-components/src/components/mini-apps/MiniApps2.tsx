@@ -377,3 +377,5 @@ export default function MiniApps2({
     </div>
   );
 }
+
+export type { MiniApps2Props };

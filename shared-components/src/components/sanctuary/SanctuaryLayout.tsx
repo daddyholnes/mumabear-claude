@@ -22,9 +22,20 @@ import {
   UserCog,
   UserSearch,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+// import Link from "next/link";
+// import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
+// Mock implementations for Next.js dependencies
+const Link = ({ href, children, className, onClick, ...props }: any) => (
+  <a href={href} className={className} onClick={onClick} {...props}>
+    {children}
+  </a>
+);
+
+const usePathname = () => {
+  return typeof window !== 'undefined' ? window.location.pathname : '/';
+};
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -37,7 +48,7 @@ import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { AgentPresenceBar } from "./AgentPresenceBar";
-import { SanctuaryNav } from "./SanctuaryNav";
+import SanctuaryNav from "./SanctuaryNav";
 
 /**
  * @component SanctuaryLayout

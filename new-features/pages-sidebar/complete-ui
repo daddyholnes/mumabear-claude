@@ -1,0 +1,1422 @@
+typescript
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Home, 
+  MessageSquare, 
+  Search, 
+  Settings, 
+  Palette, 
+  Users, 
+  Bell, 
+  Menu, 
+  X, 
+  ChevronDown,
+  PanelLeft,
+  Bot,
+  Zap,
+  BarChart3,
+  Code,
+  Database,
+  Activity,
+  Shield,
+  Terminal,
+  Layers,
+  Sparkles,
+  Brain,
+  Cpu,
+  Network,
+  Monitor,
+  FileText,
+  Cloud,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  TrendingUp,
+  Clock,
+  Star,
+  Download,
+  Upload,
+  Play,
+  Pause,
+  RotateCcw,
+  Trash2,
+  Edit3,
+  Copy,
+  Share2,
+  Filter,
+  SortAsc,
+  MoreHorizontal,
+  Plus,
+  Minus,
+  RefreshCw,
+  Save,
+  HelpCircle,
+  Info,
+  Bookmark,
+  Tag,
+  Calendar,
+  Globe,
+  Wifi,
+  WifiOff,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+  Camera,
+  CameraOff,
+  Image,
+  Video,
+  Music,
+  Headphones,
+  Speaker,
+  Phone,
+  PhoneCall,
+  Mail,
+  Send,
+  Inbox,
+  Archive,
+  Folder,
+  FolderOpen,
+  File,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  FileCode,
+  FilePdf,
+  FileSpreadsheet,
+  FileText as FileTextIcon,
+  Link,
+  ExternalLink,
+  Maximize2,
+  Minimize2,
+  FullScreen,
+  ExitFullScreen,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  FlipHorizontal,
+  FlipVertical,
+  Crop,
+  Scissors,
+  PaintBucket,
+  Brush,
+  Eraser,
+  Pipette,
+  Type,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  List,
+  ListOrdered,
+  Quote,
+  Code2,
+  Hash,
+  AtSign,
+  Percent,
+  DollarSign,
+  Euro,
+  Pound,
+  Yen,
+  Bitcoin,
+  CreditCard,
+  Wallet,
+  ShoppingCart,
+  ShoppingBag,
+  Gift,
+  Award,
+  Trophy,
+  Medal,
+  Crown,
+  Gem,
+  Heart,
+  HeartHandshake,
+  ThumbsUp,
+  ThumbsDown,
+  Smile,
+  Frown,
+  Meh,
+  Angry,
+  Laugh,
+  Cry,
+  Kiss,
+  Wink,
+  Surprised,
+  Confused,
+  Sleepy,
+  Sick,
+  Dizzy,
+  Exploding,
+  Ghost,
+  Alien,
+  Robot,
+  Skull,
+  Poop,
+  Fire,
+  Snowflake,
+  Sun,
+  Moon,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
+  Umbrella,
+  Rainbow,
+  Thermometer,
+  Wind,
+  Tornado,
+  Volcano,
+  Mountain,
+  Tree,
+  Flower,
+  Leaf,
+  Seedling,
+  Cactus,
+  Mushroom,
+  Apple,
+  Banana,
+  Cherry,
+  Grape,
+  Lemon,
+  Orange,
+  Peach,
+  Pear,
+  Strawberry,
+  Watermelon,
+  Avocado,
+  Carrot,
+  Corn,
+  Eggplant,
+  Pepper,
+  Potato,
+  Tomato,
+  Bread,
+  Cheese,
+  Egg,
+  Meat,
+  Fish,
+  Pizza,
+  Hamburger,
+  Hotdog,
+  Taco,
+  Burrito,
+  Sandwich,
+  Salad,
+  Soup,
+  Cake,
+  Cookie,
+  Donut,
+  IceCream,
+  Candy,
+  Chocolate,
+  Coffee,
+  Tea,
+  Beer,
+  Wine,
+  Cocktail,
+  Juice,
+  Water,
+  Milk
+} from 'lucide-react';
+
+// Utility function for class names
+const cn = (...classes: (string | undefined | null | false)[]): string => {
+  return classes.filter(Boolean).join(' ');
+};
+
+// Theme context
+interface ThemeContextType {
+  currentTheme: string;
+  setTheme: (theme: string) => void;
+  themes: ThemeVariant[];
+}
+
+interface ThemeVariant {
+  id: string;
+  name: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+  };
+}
+
+const THEME_VARIANTS: ThemeVariant[] = [
+  {
+    id: 'sanctuary',
+    name: 'Sanctuary Forest',
+    description: 'Calming forest greens with nature-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%)',
+      secondary: 'linear-gradient(135deg, #5D8A6B 0%, #7BA185 100%)',
+      accent: 'linear-gradient(135deg, #8FBC8F 0%, #98FB98 100%)',
+      background: '#F8FDF9',
+      surface: 'rgba(255, 255, 255, 0.95)',
+      text: '#2C3E2F'
+    }
+  },
+  {
+    id: 'daytime',
+    name: 'Bright Daytime',
+    description: 'Energizing daylight with sky blues and sunshine yellows',
+    colors: {
+      primary: 'linear-gradient(135deg, #87CEEB 0%, #4FC3F7 100%)',
+      secondary: 'linear-gradient(135deg, #FFE082 0%, #FFF176 100%)',
+      accent: 'linear-gradient(135deg, #81C784 0%, #AED581 100%)',
+      background: '#F0F8FF',
+      surface: 'rgba(255, 255, 255, 0.98)',
+      text: '#1565C0'
+    }
+  },
+  {
+    id: 'night',
+    name: 'Night Mode',
+    description: 'Deep night blues with silver accents for low-light comfort',
+    colors: {
+      primary: 'linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%)',
+      secondary: 'linear-gradient(135deg, #415A77 0%, #778DA9 100%)',
+      accent: 'linear-gradient(135deg, #B0C4DE 0%, #E0E6ED 100%)',
+      background: '#0A0E27',
+      surface: 'rgba(15, 25, 45, 0.95)',
+      text: '#E0E6ED'
+    }
+  },
+  {
+    id: 'purple_haze',
+    name: 'Purple Haze',
+    description: 'Mystical purple gradients with cosmic energy',
+    colors: {
+      primary: 'linear-gradient(135deg, #4A148C 0%, #6A1B9A 100%)',
+      secondary: 'linear-gradient(135deg, #7B1FA2 0%, #8E24AA 100%)',
+      accent: 'linear-gradient(135deg, #CE93D8 0%, #F8BBD9 100%)',
+      background: 'linear-gradient(135deg, #1A0033 0%, #2D1B47 100%)',
+      surface: 'rgba(74, 20, 140, 0.15)',
+      text: '#E1BEE7'
+    }
+  },
+  {
+    id: 'cosmic_purple',
+    name: 'Cosmic Purple',
+    description: 'Deep space purples with nebula-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #1A0033 0%, #330066 100%)',
+      secondary: 'linear-gradient(135deg, #4B0082 0%, #663399 100%)',
+      accent: 'linear-gradient(135deg, #9932CC 0%, #DA70D6 100%)',
+      background: 'linear-gradient(135deg, #0A0015 0%, #1A0033 50%, #2D1B47 100%)',
+      surface: 'rgba(75, 0, 130, 0.2)',
+      text: '#DDA0DD'
+    }
+  }
+];
+
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+
+// Navigation items
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  path: string;
+  description?: string;
+  badge?: { text: string; type: 'success' | 'warning' | 'info' };
+  isNew?: boolean;
+  children?: NavigationItem[];
+}
+
+const NAVIGATION_STRUCTURE: { [key: string]: NavigationItem[] } = {
+  core: [
+    {
+      id: 'home',
+      label: 'Sanctuary Home',
+      icon: <Home className="w-5 h-5" />,
+      path: '/',
+      description: 'Main dashboard and overview'
+    },
+    {
+      id: 'chat',
+      label: 'Main Chat',
+      icon: <MessageSquare className="w-5 h-5" />,
+      path: '/chat',
+      description: 'Primary AI conversation interface'
+    }
+  ],
+  ai_systems: [
+    {
+      id: 'scout',
+      label: 'Enhanced Scout',
+      icon: <Search className="w-5 h-5" />,
+      path: '/scout',
+      badge: { text: 'v2.5', type: 'success' },
+      description: 'Multi-model AI orchestration'
+    },
+    {
+      id: 'agents',
+      label: 'Agent Workbench',
+      icon: <Bot className="w-5 h-5" />,
+      path: '/agents',
+      isNew: true,
+      description: 'Create and manage AI agents'
+    },
+    {
+      id: 'router',
+      label: 'Execution Router',
+      icon: <Zap className="w-5 h-5" />,
+      path: '/router',
+      description: 'Intelligent task routing'
+    }
+  ],
+  development: [
+    {
+      id: 'workspaces',
+      label: 'Dev Workspaces',
+      icon: <Code className="w-5 h-5" />,
+      path: '/workspaces',
+      description: 'Development environments'
+    },
+    {
+      id: 'api-studio',
+      label: 'API Studio',
+      icon: <Database className="w-5 h-5" />,
+      path: '/api-studio',
+      description: 'API testing and development'
+    },
+    {
+      id: 'computer-use',
+      label: 'Computer Use',
+      icon: <Monitor className="w-5 h-5" />,
+      path: '/computer-use',
+      description: 'Remote system control'
+    }
+  ],
+  system: [
+    {
+      id: 'monitoring',
+      label: 'System Monitor',
+      icon: <Activity className="w-5 h-5" />,
+      path: '/monitoring',
+      description: 'System health and metrics'
+    },
+    {
+      id: 'marketplace',
+      label: 'MCP Marketplace',
+      icon: <Layers className="w-5 h-5" />,
+      path: '/marketplace',
+      description: 'Protocol marketplace'
+    }
+  ],
+  customization: [
+    {
+      id: 'themes',
+      label: 'Theme Studio',
+      icon: <Palette className="w-5 h-5" />,
+      path: '/themes',
+      isNew: true,
+      description: 'Customize appearance and themes'
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings className="w-5 h-5" />,
+      path: '/settings',
+      description: 'Application preferences'
+    }
+  ]
+};
+
+// Experience interfaces
+interface Experience {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  component: React.ComponentType;
+}
+
+// Theme Customization Experience
+const ThemeCustomizationExperience: React.FC = () => {
+  const [selectedTheme, setSelectedTheme] = useState('sanctuary');
+  const [previewMode, setPreviewMode] = useState(false);
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    highContrast: false,
+    reducedMotion: false,
+    fontSize: 'medium' as 'small' | 'medium' | 'large' | 'extra-large',
+    colorBlindSupport: 'none' as 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
+  });
+
+  const ThemePreviewCard: React.FC<{ theme: ThemeVariant; isSelected: boolean; onSelect: () => void }> = ({ 
+    theme, 
+    isSelected, 
+    onSelect 
+  }) => (
+    <motion.div
+      whileHover={{ scale: 1.02, y: -5 }}
+      whileTap={{ scale: 0.98 }}
+      className={cn(
+        "relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300",
+        isSelected 
+          ? "border-blue-500 bg-blue-50 shadow-lg" 
+          : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+      )}
+      onClick={onSelect}
+      style={{ 
+        background: isSelected ? theme.colors.surface : 'white',
+        borderColor: isSelected ? theme.colors.primary : undefined
+      }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold" style={{ color: theme.colors.text }}>
+          {theme.name}
+        </h3>
+        {isSelected && <CheckCircle className="w-5 h-5 text-green-500" />}
+      </div>
+      
+      <p className="text-sm text-gray-600 mb-4">{theme.description}</p>
+      
+      <div className="flex gap-2 mb-4">
+        <div 
+          className="w-8 h-8 rounded-full"
+          style={{ background: theme.colors.primary }}
+        />
+        <div 
+          className="w-8 h-8 rounded-full"
+          style={{ background: theme.colors.secondary }}
+        />
+        <div 
+          className="w-8 h-8 rounded-full"
+          style={{ background: theme.colors.accent }}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <div 
+          className="h-3 rounded"
+          style={{ background: theme.colors.primary, opacity: 0.8 }}
+        />
+        <div 
+          className="h-3 rounded w-3/4"
+          style={{ background: theme.colors.secondary, opacity: 0.6 }}
+        />
+        <div 
+          className="h-3 rounded w-1/2"
+          style={{ background: theme.colors.accent, opacity: 0.4 }}
+        />
+      </div>
+    </motion.div>
+  );
+
+  const AccessibilityPanel: React.FC = () => (
+    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <Eye className="w-5 h-5" />
+        Accessibility Settings
+      </h3>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">High Contrast</label>
+          <button
+            className={cn(
+              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+              accessibilitySettings.highContrast ? "bg-blue-600" : "bg-gray-200"
+            )}
+            onClick={() => setAccessibilitySettings(prev => ({ ...prev, highContrast: !prev.highContrast }))}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                accessibilitySettings.highContrast ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </button>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">Reduced Motion</label>
+          <button
+            className={cn(
+              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+              accessibilitySettings.reducedMotion ? "bg-blue-600" : "bg-gray-200"
+            )}
+            onClick={() => setAccessibilitySettings(prev => ({ ...prev, reducedMotion: !prev.reducedMotion }))}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                accessibilitySettings.reducedMotion ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </button>
+        </div>
+        
+        <div>
+          <label className="text-sm font-medium mb-2 block">Font Size</label>
+          <select 
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            value={accessibilitySettings.fontSize}
+            onChange={(e) => setAccessibilitySettings(prev => ({ 
+              ...prev, 
+              fontSize: e.target.value as any 
+            }))}
+          >
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="extra-large">Extra Large</option>
+          </select>
+        </div>
+        
+        <div>
+          <label className="text-sm font-medium mb-2 block">Color Blind Support</label>
+          <select 
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            value={accessibilitySettings.colorBlindSupport}
+            onChange={(e) => setAccessibilitySettings(prev => ({ 
+              ...prev, 
+              colorBlindSupport: e.target.value as any 
+            }))}
+          >
+            <option value="none">None</option>
+            <option value="protanopia">Protanopia</option>
+            <option value="deuteranopia">Deuteranopia</option>
+            <option value="tritanopia">Tritanopia</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Theme Customization</h1>
+          <p className="text-gray-600">Personalize your Sanctuary experience with beautiful themes and accessibility options</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Choose Your Theme</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {THEME_VARIANTS.map((theme) => (
+                  <ThemePreviewCard
+                    key={theme.id}
+                    theme={theme}
+                    isSelected={selectedTheme === theme.id}
+                    onSelect={() => setSelectedTheme(theme.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                className={cn(
+                  "px-6 py-3 rounded-lg font-medium transition-colors",
+                  previewMode 
+                    ? "bg-gray-200 text-gray-700" 
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                )}
+                onClick={() => setPreviewMode(!previewMode)}
+              >
+                {previewMode ? 'Exit Preview' : 'Preview Theme'}
+              </button>
+              
+              <button className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                Apply Theme
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <AccessibilityPanel />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Agent Workbench Experience
+const AgentWorkbenchExperience: React.FC = () => {
+  const [agents, setAgents] = useState([
+    {
+      id: '1',
+      name: 'Research Assistant',
+      description: 'Specialized in academic research and fact-checking',
+      status: 'running' as 'running' | 'stopped' | 'error',
+      template: 'research_agent',
+      lastActivity: '2 minutes ago',
+      performance: { successRate: 94, responseTime: 1.2 }
+    },
+    {
+      id: '2',
+      name: 'Code Reviewer',
+      description: 'Automated code analysis and suggestions',
+      status: 'stopped' as 'running' | 'stopped' | 'error',
+      template: 'api_agent',
+      lastActivity: '1 hour ago',
+      performance: { successRate: 87, responseTime: 0.8 }
+    },
+    {
+      id: '3',
+      name: 'UI Designer',
+      description: 'Creative design assistance and mockups',
+      status: 'running' as 'running' | 'stopped' | 'error',
+      template: 'ui_ux_agent',
+      lastActivity: '5 minutes ago',
+      performance: { successRate: 91, responseTime: 2.1 }
+    }
+  ]);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const AgentCard: React.FC<{ agent: any }> = ({ agent }) => (
+    <motion.div
+      whileHover={{ scale: 1.02, y: -5 }}
+      className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Bot className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+            <p className="text-sm text-gray-600">{agent.description}</p>
+          </div>
+        </div>
+        
+        <div className={cn(
+          "px-3 py-1 rounded-full text-xs font-medium",
+          agent.status === 'running' ? "bg-green-100 text-green-800" :
+          agent.status === 'stopped' ? "bg-gray-100 text-gray-800" :
+          "bg-red-100 text-red-800"
+        )}>
+          {agent.status}
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-4">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Success Rate</span>
+          <span className="font-medium">{agent.performance.successRate}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${agent.performance.successRate}%` }}
+          />
+        </div>
+        
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Avg Response Time</span>
+          <span className="font-medium">{agent.performance.responseTime}s</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Configure
+        </button>
+        <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const CreateAgentModal: React.FC = () => (
+    <AnimatePresence>
+      {showCreateModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Create New Agent</h3>
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Agent Name</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter agent name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Template</label>
+                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option>Research Specialist</option>
+                  <option>UI/UX Designer</option>
+                  <option>API Developer</option>
+                  <option>Security Analyst</option>
+                  <option>Custom Agent</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Describe what this agent will do"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Create Agent
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Workbench</h1>
+            <p className="text-gray-600">Create, manage, and monitor your AI agents</p>
+          </div>
+          
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Create Agent
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agents.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} />
+          ))}
+          
+          <motion.div
+            whileHover={{ scale: 1.02, y: -5 }}
+            className="bg-white rounded-2xl p-6 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+              <Plus className="w-6 h-6 text-gray-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Create New Agent</h3>
+            <p className="text-sm text-gray-600 text-center">Start building your custom AI agent</p>
+          </motion.div>
+        </div>
+
+        <CreateAgentModal />
+      </div>
+    </div>
+  );
+};
+
+// System Monitoring Experience
+const SystemMonitoringExperience: React.FC = () => {
+  const [systemHealth, setSystemHealth] = useState({
+    overall: 'healthy' as 'healthy' | 'warning' | 'critical',
+    score: 94,
+    services: [
+      { name: 'Frontend', status: 'healthy', uptime: 99.9, responseTime: 120 },
+      { name: 'Backend API', status: 'healthy', uptime: 99.8, responseTime: 85 },
+      { name: 'Database', status: 'warning', uptime: 98.5, responseTime: 200 },
+      { name: 'AI Services', status: 'healthy', uptime: 99.7, responseTime: 340 },
+      { name: 'File Storage', status: 'healthy', uptime: 99.9, responseTime: 45 }
+    ],
+    alerts: [
+      { id: '1', type: 'warning', message: 'Database response time elevated', time: '5 minutes ago' },
+      { id: '2', type: 'info', message: 'Scheduled maintenance completed', time: '2 hours ago' }
+    ]
+  });
+
+  const ServiceCard: React.FC<{ service: any }> = ({ service }) => (
+    <div className="bg-white rounded-xl p-6 border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
+        <div className={cn(
+          "w-3 h-3 rounded-full",
+          service.status === 'healthy' ? "bg-green-500" :
+          service.status === 'warning' ? "bg-yellow-500" :
+          "bg-red-500"
+        )} />
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <span className="text-sm text-gray-600">Uptime</span>
+          <span className="text-sm font-medium">{service.uptime}%</span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-sm text-gray-600">Response Time</span>
+          <span className="text-sm font-medium">{service.responseTime}ms</span>
+        </div>
+        
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className={cn(
+              "h-2 rounded-full transition-all duration-300",
+              service.status === 'healthy' ? "bg-green-500" :
+              service.status === 'warning' ? "bg-yellow-500" :
+              "bg-red-500"
+            )}
+            style={{ width: `${service.uptime}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const AlertItem: React.FC<{ alert: any }> = ({ alert }) => (
+    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+      <div className={cn(
+        "w-2 h-2 rounded-full mt-2",
+        alert.type === 'warning' ? "bg-yellow-500" :
+        alert.type === 'error' ? "bg-red-500" :
+        "bg-blue-500"
+      )} />
+      <div className="flex-1">
+        <p className="text-sm text-gray-900">{alert.message}</p>
+        <p className="text-xs text-gray-600 mt-1">{alert.time}</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">System Monitoring</h1>
+          <p className="text-gray-600">Monitor system health, performance, and alerts</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">System Health Overview</h2>
+                <div className={cn(
+                  "px-4 py-2 rounded-full text-sm font-medium",
+                  systemHealth.overall === 'healthy' ? "bg-green-100 text-green-800" :
+                  systemHealth.overall === 'warning' ? "bg-yellow-100 text-yellow-800" :
+                  "bg-red-100 text-red-800"
+                )}>
+                  {systemHealth.overall}
+                </div>
+              </div>
+              
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-gray-900 mb-2">{systemHealth.score}/100</div>
+                <p className="text-gray-600">Overall Health Score</p>
+              </div>
+              
+              <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
+                <div 
+                  className="bg-green-500 h-4 rounded-full transition-all duration-300"
+                  style={{ width: `${systemHealth.score}%` }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Service Status</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {systemHealth.services.map((service, index) => (
+                  <ServiceCard key={index} service={service} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                Recent Alerts
+              </h3>
+              
+              <div className="space-y-3">
+                {systemHealth.alerts.map((alert) => (
+                  <AlertItem key={alert.id} alert={alert} />
+                ))}
+              </div>
+              
+              <button className="w-full mt-4 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                View All Alerts
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Chat Experience
+const MainChatExperience: React.FC = () => {
+  const [messages, setMessages] = useState([
+    {
+      id: '1',
+      content: 'Hello! How can I help you today?',
+      sender: 'ai',
+      timestamp: new Date().toISOString(),
+      model: 'GPT-4'
+    }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const sendMessage = () => {
+    if (!inputValue.trim()) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      content: inputValue,
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+      model: ''
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setInputValue('');
+    setIsTyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse = {
+        id: (Date.now() + 1).toString(),
+        content: 'I understand your question. Let me help you with that...',
+        sender: 'ai',
+        timestamp: new Date().toISOString(),
+        model: 'GPT-4'
+      };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 2000);
+  };
+
+  const MessageBubble: React.FC<{ message: any }> = ({ message }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "flex mb-4",
+        message.sender === 'user' ? "justify-end" : "justify-start"
+      )}
+    >
+      <div className={cn(
+        "max-w-xs lg:max-w-md px-4 py-3 rounded-2xl",
+        message.sender === 'user' 
+          ? "bg-blue-600 text-white" 
+          : "bg-gray-100 text-gray-900"
+      )}>
+        <p className="text-sm">{message.content}</p>
+        {message.model && (
+          <p className="text-xs opacity-70 mt-1">{message.model}</p>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-white border-b border-gray-200 p-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Main Chat</h1>
+          <div className="flex items-center gap-2">
+            <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <option>GPT-4</option>
+              <option>Claude 3</option>
+              <option>Gemini Pro</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          {messages.map((message) => (
+            <MessageBubble key={message.id} message={message} />
+          ))}
+          
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start mb-4"
+            >
+              <div className="bg-gray-100 px-4 py-3 rounded-2xl">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white border-t border-gray-200 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Type your message..."
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!inputValue.trim()}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sidebar Component
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  currentPath: string;
+  onNavigate: (path: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, currentPath, onNavigate }) => {
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
+    core: true,
+    ai_systems: true,
+    development: false,
+    system: false,
+    customization: false
+  });
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
+  const NavigationSection: React.FC<{ 
+    title: string; 
+    items: NavigationItem[]; 
+    sectionId: string;
+  }> = ({ title, items, sectionId }) => (
+    <div className="mb-6">
+      <button
+        onClick={() => toggleSection(sectionId)}
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <span>{title}</span>
+        <ChevronDown 
+          className={cn(
+            "w-4 h-4 transition-transform",
+            expandedSections[sectionId] ? "rotate-180" : ""
+          )}
+        />
+      </button>
+      
+      <AnimatePresence>
+        {expandedSections[sectionId] && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2 space-y-1">
+              {items.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.path)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    currentPath === item.path
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                >
+                  {item.icon}
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.badge && (
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-xs font-medium",
+                          item.badge.type === 'success' ? "bg-green-100 text-green-700" :
+                          item.badge.type === 'warning' ? "bg-yellow-100 text-yellow-700" :
+                          "bg-blue-100 text-blue-700"
+                        )}>
+                          {item.badge.text}
+                        </span>
+                      )}
+                      {item.isNew && (
+                        <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                          New
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+  return (
+    <motion.div
+      animate={{ width: isCollapsed ? 80 : 280 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white border-r border-gray-200 flex flex-col h-full"
+    >
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          {!isCollapsed && (
+            <div>
+              <h2 className="font-semibold text-gray-900">Sanctuary</h2>
+              <p className="text-xs text-gray-600">AI Enhanced</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4">
+        {Object.entries(NAVIGATION_STRUCTURE).map(([sectionId, items]) => (
+          <NavigationSection
+            key={sectionId}
+            title={sectionId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            items={items}
+            sectionId={sectionId}
+          />
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <PanelLeft className="w-5 h-5" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+// Header Component
+interface HeaderProps {
+  currentExperience: string;
+  onThemeToggle: () => void;
+  sidebarCollapsed: boolean;
+  onSidebarToggle: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ 
+  currentExperience, 
+  onThemeToggle, 
+  sidebarCollapsed, 
+  onSidebarToggle 
+}) => {
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  return (
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onSidebarToggle}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              {currentExperience.replace(/([A-Z])/g, ' $1').trim()}
+            </h1>
+            <p className="text-sm text-gray-600">Enhanced AI Experience</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+            <Search className="w-5 h-5" />
+          </button>
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors relative"
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+            </button>
+            
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50"
+                >
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="font-semibold text-gray-900">Notifications</h3>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                      <div>
+                        <p className="text-sm text-gray-900">New agent deployed successfully</p>
+                        <p className="text-xs text-gray-600">2 minutes ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2" />
+                      <div>
+                        <p className="text-sm text-gray-900">System maintenance scheduled</p>
+                        <p className="text-xs text-gray-600">1 hour ago</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button 
+            onClick={onThemeToggle}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Palette className="w-5 h-5" />
+          </button>
+
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-medium">U</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main App Component
+const PodplaySanctuaryApp: React.FC = () => {
+  const [currentExperience, setCurrentExperience] = useState('ThemeCustomization');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('sanctuary');
+
+  const experiences: { [key: string]: React.ComponentType } = {
+    ThemeCustomization: ThemeCustomizationExperience,
+    AgentWorkbench: AgentWorkbenchExperience,
+    SystemMonitoring: SystemMonitoringExperience,
+    MainChat: MainChatExperience
+  };
+
+  const handleNavigation = (path: string) => {
+    const experienceMap: { [key: string]: string } = {
+      '/themes': 'ThemeCustomization',
+      '/agents': 'AgentWorkbench',
+      '/monitoring': 'SystemMonitoring',
+      '/chat': 'MainChat',
+      '/': 'ThemeCustomization'
+    };
+    
+    const experience = experienceMap[path] || 'ThemeCustomization';
+    setCurrentExperience(experience);
+  };
+
+  const CurrentExperienceComponent = experiences[currentExperience] || ThemeCustomizationExperience;
+
+  return (
+    <ThemeContext.Provider value={{
+      currentTheme,
+      setTheme: setCurrentTheme,
+      themes: THEME_VARIANTS
+    }}>
+      <div className="h-screen flex bg-gray-50">
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          currentPath={currentExperience === 'ThemeCustomization' ? '/themes' : '/chat'}
+          onNavigate={handleNavigation}
+        />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header
+            currentExperience={currentExperience}
+            onThemeToggle={() => setCurrentExperience('ThemeCustomization')}
+            sidebarCollapsed={sidebarCollapsed}
+            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+          
+          <div className="flex-1 overflow-auto">
+            <CurrentExperienceComponent />
+          </div>
+        </div>
+      </div>
+    </ThemeContext.Provider>
+  );
+};
+
+export default PodplaySanctuaryApp;

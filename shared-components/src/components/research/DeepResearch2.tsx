@@ -228,10 +228,11 @@ const NeonButton = React.forwardRef<HTMLButtonElement, NeonButtonProps>(
 );
 
 // File Upload Component
-const FileUpload = ({ onFileSelect, accept, multiple = false }: {
+const FileUpload = ({ onFileSelect, accept, multiple = false, children }: {
   onFileSelect: (files: File[]) => void;
   accept?: string;
   multiple?: boolean;
+  children?: React.ReactNode;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -682,7 +683,7 @@ interface DeepResearch2Props {
 const AIDeepResearchPage: React.FC<DeepResearch2Props> = ({ 
   reducedMotion = false, 
   neurodivergentMode = false, 
-  theme = 'system',
+  theme: systemTheme = 'system',
   className = ''
 }) => {
   const [theme, setTheme] = useState<Theme>('daytime');

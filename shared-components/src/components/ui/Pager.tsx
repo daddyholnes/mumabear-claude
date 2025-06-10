@@ -1,6 +1,6 @@
 import React from "react";
 
-interface PagerProps {
+export interface PagerProps {
   page: number;
   pageCount: number;
   onPageChange: (page: number) => void;

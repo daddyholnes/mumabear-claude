@@ -385,7 +385,7 @@ const GeminiLiveStudio: React.FC<LiveStudio5Props> = ({
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-pro");
   const [selectedVoice, setSelectedVoice] = useState("alloy");
   const [temperature, setTemperature] = useState([0.7]);
-  const [theme, setTheme] = useState("purple-haze");
+  const [currentTheme, setCurrentTheme] = useState("purple-haze");
   const [isRecording, setIsRecording] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -439,7 +439,7 @@ const GeminiLiveStudio: React.FC<LiveStudio5Props> = ({
     { value: "daytime-clouds", label: "Daytime Clouds", colors: ["#E0F2FE", "#BAE6FD", "#7DD3FC"] },
   ];
 
-  const currentTheme = themes.find(t => t.value === theme) || themes[0];
+  const currentThemeConfig = themes.find(t => t.value === currentTheme) || themes[0];
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -526,7 +526,7 @@ const GeminiLiveStudio: React.FC<LiveStudio5Props> = ({
   return (
     <div className="h-screen flex bg-background text-foreground relative overflow-hidden">
       {/* Animated Background */}
-      <AnimatedGradient colors={currentTheme.colors} speed={15} blur="heavy" />
+      <AnimatedGradient colors={currentThemeConfig.colors} speed={15} blur="heavy" />
       
             {/* Left Sidebar - Chat History */}
       <motion.div
@@ -566,10 +566,10 @@ const GeminiLiveStudio: React.FC<LiveStudio5Props> = ({
             {themes.map((themeOption) => (
                             <Button
                 key={themeOption.value}
-                variant={theme === themeOption.value ? "default" : "ghost"}
+                variant={currentTheme === themeOption.value ? "default" : "ghost"}
                 size="sm"
                 className="w-full justify-start rounded-2xl"
-                onClick={() => setTheme(themeOption.value)}
+                onClick={() => setCurrentTheme(themeOption.value)}
               >
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">

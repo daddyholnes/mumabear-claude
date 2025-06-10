@@ -109,7 +109,7 @@ export { Textarea } from './textarea'
 export type { TextareaProps } from './textarea'
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip'
-export type { TooltipProps } from './tooltip'
+export type { TooltipProviderProps, TooltipContentProps } from './tooltip'
 
 // Advanced Components
 export { AgentPlan } from './AgentPlan'

@@ -1,0 +1,1059 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Palette, 
+  Settings, 
+  Home, 
+  MessageSquare, 
+  Search, 
+  Bot, 
+  Zap, 
+  Monitor, 
+  Package, 
+  ChevronDown,
+  ChevronRight,
+  Sun,
+  Moon,
+  Computer,
+  Bell,
+  User,
+  Activity,
+  BarChart3,
+  Cpu,
+  Database,
+  Shield,
+  Terminal,
+  X,
+  Menu,
+  Plus,
+  Star,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  Sparkles,
+  Brain,
+  Layers,
+  Code,
+  Globe,
+  Lock,
+  Headphones,
+  FileText,
+  Camera,
+  Mic,
+  Video,
+  Upload,
+  Download,
+  Refresh,
+  Play,
+  Pause,
+  Stop
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Theme System Types
+interface ThemeVariant {
+  id: string;
+  name: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    text: string;
+  };
+}
+
+interface SystemHealth {
+  status: 'healthy' | 'warning' | 'critical' | 'unknown';
+  score: number;
+  lastChecked: string;
+  components: {
+    frontend: ComponentHealth;
+    backend: ComponentHealth;
+    database: ComponentHealth;
+    ai_services: ComponentHealth;
+    external_apis: ComponentHealth;
+  };
+}
+
+interface ComponentHealth {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  responseTime: number;
+  uptime: number;
+  lastCheck: string;
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  path: string;
+  shortcut?: string;
+  isNew?: boolean;
+  badge?: { text: string; type: 'success' | 'warning' | 'error' };
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'chat' | 'agent_created' | 'task_routed' | 'theme_changed' | 'system_event';
+  title: string;
+  description: string;
+  timestamp: string;
+  avatar?: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  status: 'draft' | 'testing' | 'deployed' | 'error' | 'archived';
+  template: string;
+  lastActivity: string;
+  performance: {
+    successRate: number;
+    responseTime: number;
+    usageCount: number;
+  };
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  preview: string;
+  timestamp: string;
+  messageCount: number;
+  model: string;
+  pinned: boolean;
+}
+
+// Theme Variants
+const THEME_VARIANTS: Record<string, ThemeVariant> = {
+  sanctuary: {
+    id: 'sanctuary',
+    name: 'Sanctuary Forest',
+    description: 'Calming forest greens with nature-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%)',
+      secondary: 'linear-gradient(135deg, #5D8A6B 0%, #7BA185 100%)',
+      accent: 'linear-gradient(135deg, #8FBC8F 0%, #98FB98 100%)',
+      background: '#F8FDF9',
+      surface: 'rgba(255, 255, 255, 0.95)',
+      text: '#2C3E2F'
+    }
+  },
+  daytime: {
+    id: 'daytime',
+    name: 'Bright Daytime',
+    description: 'Energizing daylight with sky blues and sunshine yellows',
+    colors: {
+      primary: 'linear-gradient(135deg, #87CEEB 0%, #4FC3F7 100%)',
+      secondary: 'linear-gradient(135deg, #FFE082 0%, #FFF176 100%)',
+      accent: 'linear-gradient(135deg, #81C784 0%, #AED581 100%)',
+      background: '#F0F8FF',
+      surface: 'rgba(255, 255, 255, 0.98)',
+      text: '#1565C0'
+    }
+  },
+  night: {
+    id: 'night',
+    name: 'Night Mode',
+    description: 'Deep night blues with silver accents for low-light comfort',
+    colors: {
+      primary: 'linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%)',
+      secondary: 'linear-gradient(135deg, #415A77 0%, #778DA9 100%)',
+      accent: 'linear-gradient(135deg, #B0C4DE 0%, #E0E6ED 100%)',
+      background: '#0A0E27',
+      surface: 'rgba(15, 25, 45, 0.95)',
+      text: '#E0E6ED'
+    }
+  },
+  purple_haze: {
+    id: 'purple_haze',
+    name: 'Purple Haze',
+    description: 'Mystical purple gradients with cosmic energy',
+    colors: {
+      primary: 'linear-gradient(135deg, #4A148C 0%, #6A1B9A 100%)',
+      secondary: 'linear-gradient(135deg, #7B1FA2 0%, #8E24AA 100%)',
+      accent: 'linear-gradient(135deg, #CE93D8 0%, #F8BBD9 100%)',
+      background: 'linear-gradient(135deg, #1A0033 0%, #2D1B47 100%)',
+      surface: 'rgba(74, 20, 140, 0.15)',
+      text: '#E1BEE7'
+    }
+  },
+  cosmic_purple: {
+    id: 'cosmic_purple',
+    name: 'Cosmic Purple',
+    description: 'Deep space purples with nebula-inspired gradients',
+    colors: {
+      primary: 'linear-gradient(135deg, #1A0033 0%, #330066 100%)',
+      secondary: 'linear-gradient(135deg, #4B0082 0%, #663399 100%)',
+      accent: 'linear-gradient(135deg, #9932CC 0%, #DA70D6 100%)',
+      background: 'linear-gradient(135deg, #0A0015 0%, #1A0033 50%, #2D1B47 100%)',
+      surface: 'rgba(75, 0, 130, 0.2)',
+      text: '#DDA0DD'
+    }
+  }
+};
+
+// Navigation Structure
+const NAVIGATION_STRUCTURE = {
+  core: [
+    {
+      id: 'home',
+      label: 'Sanctuary Home',
+      icon: Home,
+      path: '/',
+      description: 'Main dashboard and overview'
+    },
+    {
+      id: 'chat',
+      label: 'Main Chat',
+      icon: MessageSquare,
+      path: '/chat',
+      description: 'Primary AI conversation interface'
+    }
+  ],
+  ai_systems: [
+    {
+      id: 'scout',
+      label: 'Enhanced Scout',
+      icon: Search,
+      path: '/scout',
+      badge: { text: 'v2.5', type: 'success' as const },
+      description: 'Multi-model AI orchestration'
+    },
+    {
+      id: 'agents',
+      label: 'Agent Workbench',
+      icon: Bot,
+      path: '/agents',
+      isNew: true,
+      description: 'Create and manage AI agents'
+    },
+    {
+      id: 'router',
+      label: 'Execution Router',
+      icon: Zap,
+      path: '/router',
+      description: 'Intelligent task routing'
+    }
+  ],
+  development: [
+    {
+      id: 'workspaces',
+      label: 'Dev Workspaces',
+      icon: Code,
+      path: '/workspaces',
+      description: 'Development environments'
+    },
+    {
+      id: 'api-studio',
+      label: 'API Studio',
+      icon: Globe,
+      path: '/api-studio',
+      description: 'API testing and development'
+    },
+    {
+      id: 'computer-use',
+      label: 'Computer Use',
+      icon: Monitor,
+      path: '/computer-use',
+      description: 'Remote system control'
+    }
+  ],
+  system: [
+    {
+      id: 'monitoring',
+      label: 'System Monitor',
+      icon: Activity,
+      path: '/monitoring',
+      description: 'System health and performance'
+    },
+    {
+      id: 'marketplace',
+      label: 'MCP Marketplace',
+      icon: Package,
+      path: '/marketplace',
+      description: 'Protocol marketplace'
+    }
+  ],
+  customization: [
+    {
+      id: 'themes',
+      label: 'Theme Studio',
+      icon: Palette,
+      path: '/themes',
+      isNew: true,
+      description: 'Customize appearance and themes'
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      path: '/settings',
+      description: 'Application preferences'
+    }
+  ]
+};
+
+// Mock Data
+const mockSystemHealth: SystemHealth = {
+  status: 'healthy',
+  score: 98,
+  lastChecked: new Date().toISOString(),
+  components: {
+    frontend: { status: 'healthy', responseTime: 45, uptime: 99.9, lastCheck: new Date().toISOString() },
+    backend: { status: 'healthy', responseTime: 120, uptime: 99.8, lastCheck: new Date().toISOString() },
+    database: { status: 'healthy', responseTime: 25, uptime: 99.9, lastCheck: new Date().toISOString() },
+    ai_services: { status: 'healthy', responseTime: 200, uptime: 99.5, lastCheck: new Date().toISOString() },
+    external_apis: { status: 'degraded', responseTime: 450, uptime: 98.2, lastCheck: new Date().toISOString() }
+  }
+};
+
+const mockQuickActions: QuickAction[] = [
+  { id: 'new_chat', label: 'Start New Chat', icon: MessageSquare, path: '/chat', shortcut: 'Ctrl+N' },
+  { id: 'create_agent', label: 'Create Agent', icon: Bot, path: '/agents/create', shortcut: 'Ctrl+A' },
+  { id: 'analyze_task', label: 'Analyze Task', icon: Search, path: '/router/analyze', shortcut: 'Ctrl+T' },
+  { id: 'customize_theme', label: 'Customize Theme', icon: Palette, path: '/themes', shortcut: 'Ctrl+Shift+T' }
+];
+
+const mockRecentActivity: ActivityItem[] = [
+  {
+    id: '1',
+    type: 'chat',
+    title: 'New conversation started',
+    description: 'Chat with Gemini 2.5 Pro about React optimization',
+    timestamp: '2 minutes ago'
+  },
+  {
+    id: '2',
+    type: 'agent_created',
+    title: 'Agent deployed successfully',
+    description: 'Research Specialist agent is now active',
+    timestamp: '15 minutes ago'
+  },
+  {
+    id: '3',
+    type: 'theme_changed',
+    title: 'Theme updated',
+    description: 'Switched to Cosmic Purple theme',
+    timestamp: '1 hour ago'
+  }
+];
+
+const mockAgents: Agent[] = [
+  {
+    id: '1',
+    name: 'Research Specialist',
+    description: 'Deep research and analysis with multi-source verification',
+    status: 'deployed',
+    template: 'research_agent',
+    lastActivity: '5 minutes ago',
+    performance: { successRate: 94, responseTime: 1200, usageCount: 47 }
+  },
+  {
+    id: '2',
+    name: 'UI/UX Designer',
+    description: 'Creative design assistance with user experience focus',
+    status: 'testing',
+    template: 'ui_ux_agent',
+    lastActivity: '2 hours ago',
+    performance: { successRate: 89, responseTime: 800, usageCount: 23 }
+  }
+];
+
+const mockConversations: Conversation[] = [
+  {
+    id: '1',
+    title: 'React Optimization Discussion',
+    preview: 'How can I optimize my React components for better performance?',
+    timestamp: '2 minutes ago',
+    messageCount: 12,
+    model: 'Gemini 2.5 Pro',
+    pinned: true
+  },
+  {
+    id: '2',
+    title: 'API Design Best Practices',
+    preview: 'What are the current best practices for REST API design?',
+    timestamp: '1 hour ago',
+    messageCount: 8,
+    model: 'Gemini 2.5 Flash',
+    pinned: false
+  }
+];
+
+// Theme Toggle Component
+const ThemeToggle: React.FC<{ currentTheme: string; onThemeChange: (theme: string) => void }> = ({ 
+  currentTheme, 
+  onThemeChange 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/50 hover:bg-background/80 transition-colors"
+      >
+        <Palette className="h-4 w-4" />
+        <span className="text-sm font-medium">{THEME_VARIANTS[currentTheme]?.name || 'Theme'}</span>
+        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full left-0 mt-2 w-64 bg-background border border-border rounded-lg shadow-lg z-50"
+          >
+            <div className="p-2">
+              {Object.values(THEME_VARIANTS).map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => {
+                    onThemeChange(theme.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left p-3 rounded-lg hover:bg-muted transition-colors",
+                    currentTheme === theme.id && "bg-muted"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ background: theme.colors.primary }}
+                    />
+                    <div>
+                      <div className="font-medium text-sm">{theme.name}</div>
+                      <div className="text-xs text-muted-foreground">{theme.description}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Sidebar Component
+const Sidebar: React.FC<{
+  isCollapsed: boolean;
+  onToggle: () => void;
+  currentPath: string;
+  onNavigate: (path: string) => void;
+}> = ({ isCollapsed, onToggle, currentPath, onNavigate }) => {
+  const [expandedSections, setExpandedSections] = useState<string[]>(['core', 'ai_systems']);
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+
+  const renderNavigationSection = (sectionId: string, items: any[], title: string) => {
+    const isExpanded = expandedSections.includes(sectionId);
+
+    return (
+      <div key={sectionId} className="mb-4">
+        {!isCollapsed && (
+          <button
+            onClick={() => toggleSection(sectionId)}
+            className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span>{title}</span>
+            <ChevronRight className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")} />
+          </button>
+        )}
+        
+        <AnimatePresence>
+          {(isExpanded || isCollapsed) && (
+            <motion.div
+              initial={!isCollapsed ? { height: 0, opacity: 0 } : undefined}
+              animate={!isCollapsed ? { height: "auto", opacity: 1 } : undefined}
+              exit={!isCollapsed ? { height: 0, opacity: 0 } : undefined}
+              className="space-y-1"
+            >
+              {items.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.path)}
+                  className={cn(
+                    "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    currentPath === item.path 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                    isCollapsed && "justify-center"
+                  )}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.isNew && (
+                        <span className="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">
+                          New
+                        </span>
+                      )}
+                      {item.badge && (
+                        <span className={cn(
+                          "px-1.5 py-0.5 text-xs rounded-full",
+                          item.badge.type === 'success' && "bg-green-100 text-green-700",
+                          item.badge.type === 'warning' && "bg-yellow-100 text-yellow-700",
+                          item.badge.type === 'error' && "bg-red-100 text-red-700"
+                        )}>
+                          {item.badge.text}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  return (
+    <motion.div
+      animate={{ width: isCollapsed ? 64 : 256 }}
+      className="bg-background border-r border-border h-full flex flex-col"
+    >
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-semibold">Sanctuary</span>
+            </div>
+          )}
+          <button
+            onClick={onToggle}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {renderNavigationSection('core', NAVIGATION_STRUCTURE.core, 'Core')}
+        {renderNavigationSection('ai_systems', NAVIGATION_STRUCTURE.ai_systems, 'AI Systems')}
+        {renderNavigationSection('development', NAVIGATION_STRUCTURE.development, 'Development')}
+        {renderNavigationSection('system', NAVIGATION_STRUCTURE.system, 'System')}
+        {renderNavigationSection('customization', NAVIGATION_STRUCTURE.customization, 'Customization')}
+      </div>
+
+      {/* User Profile */}
+      <div className="p-4 border-t border-border">
+        <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+            <User className="h-4 w-4" />
+          </div>
+          {!isCollapsed && (
+            <div className="flex-1">
+              <div className="text-sm font-medium">User</div>
+              <div className="text-xs text-muted-foreground">user@sanctuary.ai</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Header Component
+const Header: React.FC<{
+  currentExperience: string;
+  systemHealth: SystemHealth;
+  currentTheme: string;
+  onThemeChange: (theme: string) => void;
+}> = ({ currentExperience, systemHealth, currentTheme, onThemeChange }) => {
+  const getHealthColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'text-green-500';
+      case 'warning': return 'text-yellow-500';
+      case 'critical': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  return (
+    <div className="h-16 bg-background border-b border-border flex items-center justify-between px-6">
+      <div className="flex items-center gap-4">
+        <h1 className="text-xl font-semibold">{currentExperience}</h1>
+        <div className="flex items-center gap-2">
+          <Circle className={cn("h-2 w-2 fill-current", getHealthColor(systemHealth.status))} />
+          <span className="text-sm text-muted-foreground">System Health: {systemHealth.score}%</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <ThemeToggle currentTheme={currentTheme} onThemeChange={onThemeChange} />
+        <button className="p-2 rounded-lg hover:bg-muted transition-colors relative">
+          <Bell className="h-4 w-4" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+            3
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Dashboard Widgets
+const WelcomeWidget: React.FC = () => {
+  const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  return (
+    <div className="bg-background border border-border rounded-lg p-6">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+          <Sparkles className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold">Welcome back to Sanctuary</h2>
+          <p className="text-muted-foreground">Current time: {currentTime}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-4">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-primary">12</div>
+          <div className="text-sm text-muted-foreground">Conversations</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-primary">5</div>
+          <div className="text-sm text-muted-foreground">Active Agents</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-primary">98%</div>
+          <div className="text-sm text-muted-foreground">System Health</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SystemHealthWidget: React.FC<{ systemHealth: SystemHealth }> = ({ systemHealth }) => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'degraded': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'unhealthy': return <X className="h-4 w-4 text-red-500" />;
+      default: return <Circle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div className="bg-background border border-border rounded-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">System Health</h3>
+        <div className="flex items-center gap-2">
+          <Circle className={cn("h-3 w-3 fill-current", 
+            systemHealth.status === 'healthy' ? 'text-green-500' : 
+            systemHealth.status === 'warning' ? 'text-yellow-500' : 'text-red-500'
+          )} />
+          <span className="text-sm font-medium">{systemHealth.score}%</span>
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        {Object.entries(systemHealth.components).map(([key, component]) => (
+          <div key={key} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStatusIcon(component.status)}
+              <span className="text-sm capitalize">{key.replace('_', ' ')}</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {component.responseTime}ms
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const QuickActionsWidget: React.FC<{ actions: QuickAction[]; onActionClick: (actionId: string) => void }> = ({ 
+  actions, 
+  onActionClick 
+}) => {
+  return (
+    <div className="bg-background border border-border rounded-lg p-6">
+      <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+      <div className="grid grid-cols-2 gap-3">
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            onClick={() => onActionClick(action.id)}
+            className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted transition-colors text-left"
+          >
+            <action.icon className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <div className="text-sm font-medium">{action.label}</div>
+              {action.shortcut && (
+                <div className="text-xs text-muted-foreground">{action.shortcut}</div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const RecentActivityWidget: React.FC<{ activities: ActivityItem[] }> = ({ activities }) => {
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'chat': return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      case 'agent_created': return <Bot className="h-4 w-4 text-green-500" />;
+      case 'task_routed': return <Zap className="h-4 w-4 text-yellow-500" />;
+      case 'theme_changed': return <Palette className="h-4 w-4 text-purple-500" />;
+      default: return <Activity className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div className="bg-background border border-border rounded-lg p-6">
+      <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+      <div className="space-y-4">
+        {activities.map((activity) => (
+          <div key={activity.id} className="flex items-start gap-3">
+            <div className="mt-0.5">
+              {getActivityIcon(activity.type)}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium">{activity.title}</div>
+              <div className="text-sm text-muted-foreground">{activity.description}</div>
+              <div className="text-xs text-muted-foreground mt-1">{activity.timestamp}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Experience Components
+const SanctuaryHome: React.FC = () => {
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WelcomeWidget />
+        <SystemHealthWidget systemHealth={mockSystemHealth} />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <QuickActionsWidget 
+          actions={mockQuickActions} 
+          onActionClick={(id) => console.log('Action clicked:', id)} 
+        />
+        <RecentActivityWidget activities={mockRecentActivity} />
+      </div>
+    </div>
+  );
+};
+
+const ThemeCustomization: React.FC<{ currentTheme: string; onThemeChange: (theme: string) => void }> = ({ 
+  currentTheme, 
+  onThemeChange 
+}) => {
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Theme Customization</h2>
+        <p className="text-muted-foreground">Choose from our collection of beautiful themes</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.values(THEME_VARIANTS).map((theme) => (
+          <div
+            key={theme.id}
+            className={cn(
+              "border border-border rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg",
+              currentTheme === theme.id && "ring-2 ring-primary"
+            )}
+            onClick={() => onThemeChange(theme.id)}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-8 h-8 rounded-full"
+                style={{ background: theme.colors.primary }}
+              />
+              <div>
+                <h3 className="font-semibold">{theme.name}</h3>
+                <p className="text-sm text-muted-foreground">{theme.description}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="h-2 rounded-full" style={{ background: theme.colors.primary }} />
+              <div className="h-2 rounded-full" style={{ background: theme.colors.secondary }} />
+              <div className="h-2 rounded-full" style={{ background: theme.colors.accent }} />
+            </div>
+            
+            {currentTheme === theme.id && (
+              <div className="mt-4 flex items-center gap-2 text-primary">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Active</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AgentWorkbench: React.FC = () => {
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Agent Workbench</h2>
+        <p className="text-muted-foreground">Create and manage your AI agents</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {mockAgents.map((agent) => (
+          <div key={agent.id} className="border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{agent.name}</h3>
+                  <p className="text-sm text-muted-foreground">{agent.lastActivity}</p>
+                </div>
+              </div>
+              <span className={cn(
+                "px-2 py-1 text-xs rounded-full",
+                agent.status === 'deployed' && "bg-green-100 text-green-700",
+                agent.status === 'testing' && "bg-yellow-100 text-yellow-700",
+                agent.status === 'draft' && "bg-gray-100 text-gray-700"
+              )}>
+                {agent.status}
+              </span>
+            </div>
+            
+            <p className="text-sm text-muted-foreground mb-4">{agent.description}</p>
+            
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-primary">{agent.performance.successRate}%</div>
+                <div className="text-xs text-muted-foreground">Success Rate</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-primary">{agent.performance.responseTime}ms</div>
+                <div className="text-xs text-muted-foreground">Avg Response</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-primary">{agent.performance.usageCount}</div>
+                <div className="text-xs text-muted-foreground">Uses</div>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        <button className="border border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center gap-4 hover:bg-muted transition-colors">
+          <Plus className="h-8 w-8 text-muted-foreground" />
+          <div className="text-center">
+            <div className="font-medium">Create New Agent</div>
+            <div className="text-sm text-muted-foreground">Start with a template or build from scratch</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const MainChat: React.FC = () => {
+  return (
+    <div className="h-full flex">
+      {/* Conversations Sidebar */}
+      <div className="w-80 border-r border-border bg-background">
+        <div className="p-4 border-b border-border">
+          <h3 className="font-semibold mb-3">Conversations</h3>
+          <button className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg">
+            <Plus className="h-4 w-4" />
+            New Chat
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-2">
+          {mockConversations.map((conversation) => (
+            <div key={conversation.id} className="p-3 rounded-lg hover:bg-muted cursor-pointer">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="font-medium text-sm truncate">{conversation.title}</h4>
+                {conversation.pinned && <Star className="h-3 w-3 text-yellow-500 fill-current" />}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">{conversation.preview}</p>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
+                <span className="text-xs text-muted-foreground">{conversation.messageCount} messages</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">React Optimization Discussion</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Gemini 2.5 Pro</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                <User className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-sm">How can I optimize my React components for better performance?</p>
+                </div>
+                <span className="text-xs text-muted-foreground mt-1">2 minutes ago</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <Brain className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="bg-primary/5 rounded-lg p-3">
+                  <p className="text-sm">Here are several key strategies for optimizing React components:</p>
+                  <ul className="text-sm mt-2 space-y-1">
+                    <li>• Use React.memo for preventing unnecessary re-renders</li>
+                    <li>• Implement useMemo and useCallback for expensive calculations</li>
+                    <li>• Consider code splitting with React.lazy</li>
+                    <li>• Optimize bundle size with tree shaking</li>
+                  </ul>
+                </div>
+                <span className="text-xs text-muted-foreground mt-1">1 minute ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 border-t border-border">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Type your message..."
+              className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Application Component
+const PodplaySanctuaryApp: React.FC = () => {
+  const [currentTheme, setCurrentTheme] = useState('sanctuary');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [currentPath, setCurrentPath] = useState('/');
+  const [currentExperience, setCurrentExperience] = useState('Sanctuary Home');
+
+  const handleNavigation = (path: string) => {
+    setCurrentPath(path);
+    
+    // Update experience title based on path
+    const allItems = [
+      ...NAVIGATION_STRUCTURE.core,
+      ...NAVIGATION_STRUCTURE.ai_systems,
+      ...NAVIGATION_STRUCTURE.development,
+      ...NAVIGATION_STRUCTURE.system,
+      ...NAVIGATION_STRUCTURE.customization
+    ];
+    
+    const item = allItems.find(item => item.path === path);
+    if (item) {
+      setCurrentExperience(item.label);
+    }
+  };
+
+  const renderCurrentExperience = () => {
+    switch (currentPath) {
+      case '/':
+        return <SanctuaryHome />;
+      case '/themes':
+        return <ThemeCustomization currentTheme={currentTheme} onThemeChange={setCurrentTheme} />;
+      case '/agents':
+        return <AgentWorkbench />;
+      case '/chat':
+        return <MainChat />;
+      default:
+        return <SanctuaryHome />;
+    }
+  };
+
+  // Apply theme styles
+  const currentThemeData = THEME_VARIANTS[currentTheme];
+  const themeStyles = currentThemeData ? {
+    '--theme-primary': currentThemeData.colors.primary,
+    '--theme-background': currentThemeData.colors.background,
+    '--theme-text': currentThemeData.colors.text,
+  } as React.CSSProperties : {};
+
+  return (
+    <div 
+      className="h-screen bg-background text-foreground flex"
+      style={themeStyles}
+    >
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        currentPath={currentPath}
+        onNavigate={handleNavigation}
+      />
+      
+      <div className="flex-1 flex flex-col">
+        <Header
+          currentExperience={currentExperience}
+          systemHealth={mockSystemHealth}
+          currentTheme={currentTheme}
+          onThemeChange={setCurrentTheme}
+        />
+        
+        <div className="flex-1 overflow-hidden">
+          {renderCurrentExperience()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PodplaySanctuaryApp;

@@ -572,3 +572,4 @@ export default function ScoutUI1(props: ScoutUI1Props) {
 }
 
 export { ScoutUI as ScoutUIClassic };
+export type { ScoutUI1Props };
