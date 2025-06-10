@@ -19,15 +19,15 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import json
 
-# Initialize logging first
-logging.basicConfig(
-    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(os.getenv('LOG_FILE', 'mama_bear.log')),
-        logging.StreamHandler()
-    ]
-)
+# Initialize logging first with Windows compatibility
+import sys
+import os
+
+# Import Windows-compatible logging
+from utils.windows_logging import setup_windows_compatible_logging
+
+# Set up logging that handles Unicode properly on Windows
+setup_windows_compatible_logging()
 logger = logging.getLogger("PodplaySanctuary")
 
 # Import our sanctuary services

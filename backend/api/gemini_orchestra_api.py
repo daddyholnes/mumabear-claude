@@ -29,11 +29,17 @@ def init_gemini_orchestra(app):
     global mama_bear_agent, orchestra_manager, task_analyzer
     
     try:
-        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        # Use sophisticated routing system with primary and fallback keys
+        gemini_api_key = (
+            os.getenv('GEMINI_API_KEY_PRIMARY') or 
+            os.getenv('GOOGLE_AI_API_KEY') or 
+            os.getenv('GEMINI_API_KEY_FALLBACK') or
+            os.getenv('GEMINI_API_KEY')  # Legacy fallback
+        )
         anthropic_api_key = os.getenv('ANTHROPIC_API_KEY')
         
         if not gemini_api_key:
-            logger.error("GEMINI_API_KEY not found in environment variables")
+            logger.error("No Gemini API key found. Checked: GEMINI_API_KEY_PRIMARY, GOOGLE_AI_API_KEY, GEMINI_API_KEY_FALLBACK, GEMINI_API_KEY")
             return False
         
         # Initialize components
