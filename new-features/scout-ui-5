@@ -1,0 +1,720 @@
+'use client'
+
+import React, { useState, useCallback, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  FolderIcon, 
+  FolderOpenIcon, 
+  FileIcon, 
+  Download, 
+  Eye, 
+  Clock, 
+  Play, 
+  Pause, 
+  Mic, 
+  Paperclip, 
+  Send, 
+  Image, 
+  Upload,
+  Code,
+  Activity,
+  CheckCircle,
+  Circle,
+  X,
+  ArrowDown
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
+
+// Types
+interface FileNode {
+  id: string
+  name: string
+  type: 'file' | 'folder'
+  children?: FileNode[]
+  content?: string
+  size?: number
+  modified?: Date
+}
+
+interface TimelineStep {
+  id: string
+  title: string
+  description: string
+  status: 'completed' | 'current' | 'pending' | 'error'
+  timestamp: Date
+  duration?: number
+}
+
+interface ChatMessage {
+  id: string
+  content: string
+  sender: 'user' | 'ai'
+  timestamp: Date
+  attachments?: Array<{
+    name: string
+    type: string
+    url: string
+  }>
+}
+
+interface LiveTickerItem {
+  id: string
+  action: string
+  target: string
+  status: 'success' | 'error' | 'running'
+  timestamp: Date
+}
+
+// File Tree Component
+const FileTree: React.FC<{
+  nodes: FileNode[]
+  onFileSelect: (file: FileNode) => void
+  selectedFileId?: string
+}> = ({ nodes, onFileSelect, selectedFileId }) => {
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['1', '2', '5']))
+
+  const toggleNode = (nodeId: string) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId)
+      } else {
+        newSet.add(nodeId)
+      }
+      return newSet
+    })
+  }
+
+  const renderNode = (node: FileNode, level: number = 0) => {
+    const isExpanded = expandedNodes.has(node.id)
+    const isSelected = selectedFileId === node.id
+
+    return (
+      <div key={node.id}>
+        <div
+          className={cn(
+            "flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-muted/50 transition-colors",
+            isSelected && "bg-muted",
+            level > 0 && "ml-4"
+          )}
+          onClick={() => {
+            if (node.type === 'folder') {
+              toggleNode(node.id)
+            } else {
+              onFileSelect(node)
+            }
+          }}
+        >
+          {node.type === 'folder' ? (
+            <>
+              {isExpanded ? (
+                <FolderOpenIcon className="h-4 w-4 text-blue-500" />
+              ) : (
+                <FolderIcon className="h-4 w-4 text-blue-500" />
+              )}
+            </>
+          ) : (
+            <FileIcon className="h-4 w-4 text-gray-500" />
+          )}
+          <span className="text-sm">{node.name}</span>
+          {node.type === 'file' && node.size && (
+            <span className="text-xs text-muted-foreground ml-auto">
+              {(node.size / 1024).toFixed(1)}KB
+            </span>
+          )}
+        </div>
+        {node.type === 'folder' && isExpanded && node.children && (
+          <div>
+            {node.children.map(child => renderNode(child, level + 1))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-1">
+      {nodes.map(node => renderNode(node))}
+    </div>
+  )
+}
+
+// Timeline Component
+const Timeline: React.FC<{ steps: TimelineStep[] }> = ({ steps }) => {
+  return (
+    <div className="space-y-4">
+      {steps.map((step, index) => (
+        <div key={step.id} className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <div className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center border-2",
+              step.status === 'completed' && "bg-green-500 border-green-500 text-white",
+              step.status === 'current' && "bg-blue-500 border-blue-500 text-white",
+              step.status === 'pending' && "bg-gray-200 border-gray-300",
+              step.status === 'error' && "bg-red-500 border-red-500 text-white"
+            )}>
+              {step.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+              {step.status === 'current' && <Circle className="h-4 w-4 animate-pulse" />}
+              {step.status === 'pending' && <Circle className="h-4 w-4" />}
+              {step.status === 'error' && <X className="h-4 w-4" />}
+            </div>
+            {index < steps.length - 1 && (
+              <div className={cn(
+                "w-0.5 h-8 mt-2",
+                step.status === 'completed' ? "bg-green-500" : "bg-gray-300"
+              )} />
+            )}
+          </div>
+          <div className="flex-1 pb-4">
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium text-sm">{step.title}</h4>
+              <Badge variant={
+                step.status === 'completed' ? 'default' :
+                step.status === 'current' ? 'secondary' :
+                step.status === 'error' ? 'destructive' : 'outline'
+              }>
+                {step.status}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>{step.timestamp.toLocaleTimeString()}</span>
+              {step.duration && (
+                <span>({step.duration}s)</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Live Ticker Component
+const LiveTicker: React.FC<{ items: LiveTickerItem[] }> = ({ items }) => {
+  return (
+    <div className="fixed bottom-4 right-4 w-80 max-h-32 overflow-hidden">
+      <Card className="bg-background/95 backdrop-blur">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Live Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ScrollArea className="h-20">
+            <div className="space-y-1">
+              {items.slice(-5).map((item) => (
+                <div key={item.id} className="flex items-center gap-2 text-xs">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full",
+                    item.status === 'success' && "bg-green-500",
+                    item.status === 'error' && "bg-red-500",
+                    item.status === 'running' && "bg-blue-500 animate-pulse"
+                  )} />
+                  <span className="text-muted-foreground">
+                    {item.action} <span className="font-medium">{item.target}</span>
+                  </span>
+                  <span className="ml-auto text-muted-foreground">
+                    {item.timestamp.toLocaleTimeString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Chat Component
+const ChatInterface: React.FC<{
+  messages: ChatMessage[]
+  onSendMessage: (message: string, attachments?: File[]) => void
+  isGenerating: boolean
+}> = ({ messages, onSendMessage, isGenerating }) => {
+  const [input, setInput] = useState('')
+  const [attachments, setAttachments] = useState<File[]>([])
+  const [isRecording, setIsRecording] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSend = () => {
+    if (input.trim() || attachments.length > 0) {
+      onSendMessage(input, attachments)
+      setInput('')
+      setAttachments([])
+    }
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setAttachments(prev => [...prev, ...files])
+  }
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full p-4">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex gap-3",
+                  message.sender === 'user' && "flex-row-reverse"
+                )}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    {message.sender === 'user' ? 'U' : 'AI'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className={cn(
+                  "max-w-[80%] rounded-lg p-3",
+                  message.sender === 'user' 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted"
+                )}>
+                  <p className="text-sm">{message.content}</p>
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {message.attachments.map((attachment, index) => (
+                        <div key={index} className="flex items-center gap-2 text-xs">
+                          <Paperclip className="h-3 w-3" />
+                          <span>{attachment.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {isGenerating && (
+              <div className="flex gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <div className="bg-muted rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-pulse">Thinking...</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+      </div>
+
+      <div className="p-4 border-t">
+        {attachments.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <div key={index} className="flex items-center gap-2 bg-muted rounded px-2 py-1 text-sm">
+                <span>{file.name}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-4 w-4 p-0"
+                  onClick={() => removeAttachment(index)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              className="min-h-[40px] pr-20"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSend()
+                }
+              }}
+            />
+            <div className="absolute right-2 top-2 flex gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0"
+                onClick={() => setIsRecording(!isRecording)}
+              >
+                <Mic className={cn("h-3 w-3", isRecording && "text-red-500")} />
+              </Button>
+            </div>
+          </div>
+          <Button onClick={handleSend} disabled={!input.trim() && attachments.length === 0}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileUpload}
+        />
+      </div>
+    </div>
+  )
+}
+
+// Main Component
+const AIAgentWorkspace: React.FC = () => {
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false)
+  const [rightPanelOpen, setRightPanelOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState('default')
+
+  // Sample data
+  const fileTree: FileNode[] = [
+    {
+      id: '1',
+      name: 'src',
+      type: 'folder',
+      children: [
+        {
+          id: '2',
+          name: 'components',
+          type: 'folder',
+          children: [
+            { id: '3', name: 'Header.tsx', type: 'file', size: 2048, content: 'import React from "react"...' },
+            { id: '4', name: 'Footer.tsx', type: 'file', size: 1536, content: 'export const Footer = () => ...' }
+          ]
+        },
+        { id: '5', name: 'App.tsx', type: 'file', size: 4096, content: 'function App() { return <div>...</div> }' },
+        { id: '6', name: 'index.css', type: 'file', size: 1024, content: 'body { margin: 0; }' }
+      ]
+    },
+    {
+      id: '7',
+      name: 'package.json',
+      type: 'file',
+      size: 512,
+      content: '{ "name": "my-app", "version": "1.0.0" }'
+    }
+  ]
+
+  const timelineSteps: TimelineStep[] = [
+    {
+      id: '1',
+      title: 'Environment Setup',
+      description: 'Initializing development environment',
+      status: 'completed',
+      timestamp: new Date(Date.now() - 300000),
+      duration: 45
+    },
+    {
+      id: '2',
+      title: 'Project Structure',
+      description: 'Creating project folders and files',
+      status: 'completed',
+      timestamp: new Date(Date.now() - 240000),
+      duration: 30
+    },
+    {
+      id: '3',
+      title: 'Component Development',
+      description: 'Building React components',
+      status: 'current',
+      timestamp: new Date(Date.now() - 120000)
+    },
+    {
+      id: '4',
+      title: 'Testing',
+      description: 'Running unit tests',
+      status: 'pending',
+      timestamp: new Date()
+    },
+    {
+      id: '5',
+      title: 'Deployment',
+      description: 'Deploy to production',
+      status: 'pending',
+      timestamp: new Date()
+    }
+  ]
+
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      content: 'Hello! I\'m your AI development agent. I can help you build full-stack applications from prompt to production. What would you like to create today?',
+      sender: 'ai',
+      timestamp: new Date(Date.now() - 60000)
+    }
+  ])
+
+  const [liveTickerItems, setLiveTickerItems] = useState<LiveTickerItem[]>([
+    {
+      id: '1',
+      action: 'Created',
+      target: 'package.json',
+      status: 'success',
+      timestamp: new Date(Date.now() - 30000)
+    },
+    {
+      id: '2',
+      action: 'Installing',
+      target: 'dependencies',
+      status: 'running',
+      timestamp: new Date(Date.now() - 15000)
+    }
+  ])
+
+  const themes = {
+    default: 'bg-background text-foreground',
+    purple: 'bg-purple-950 text-purple-50',
+    tokyo: 'bg-gray-900 text-cyan-400',
+    blue: 'bg-blue-950 text-blue-50',
+    pink: 'bg-pink-950 text-pink-50',
+    orange: 'bg-orange-950 text-orange-50'
+  }
+
+  const handleSendMessage = (content: string, attachments?: File[]) => {
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content,
+      sender: 'user',
+      timestamp: new Date(),
+      attachments: attachments?.map(file => ({
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file)
+      }))
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setIsGenerating(true)
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: 'I understand your request. Let me start working on that for you. I\'ll create the necessary files and set up the development environment.',
+        sender: 'ai',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, aiMessage])
+      setIsGenerating(false)
+
+      // Add to live ticker
+      setLiveTickerItems(prev => [...prev, {
+        id: Date.now().toString(),
+        action: 'Processing',
+        target: 'user request',
+        status: 'success',
+        timestamp: new Date()
+      }])
+    }, 2000)
+  }
+
+  return (
+    <div className={cn("h-screen flex relative overflow-hidden", themes[currentTheme as keyof typeof themes])}>
+      {/* Theme Selector */}
+      <div className="absolute top-4 left-4 z-50">
+        <select
+          value={currentTheme}
+          onChange={(e) => setCurrentTheme(e.target.value)}
+          className="bg-background border border-border rounded px-2 py-1 text-sm"
+        >
+          <option value="default">Default</option>
+          <option value="purple">Purple Neon</option>
+          <option value="tokyo">Tokyo Night</option>
+          <option value="blue">Blue Explosion</option>
+          <option value="pink">Pink Scrumptious</option>
+          <option value="orange">Orange Explosion</option>
+        </select>
+      </div>
+
+      {/* Left Panel Toggle */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-40"
+        onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+      >
+        <ChevronRight className={cn("h-4 w-4 transition-transform", leftPanelOpen && "rotate-180")} />
+      </Button>
+
+      {/* Left Panel - File Tree */}
+      <AnimatePresence>
+        {leftPanelOpen && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -400, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-80 bg-card border-r border-border flex flex-col z-30"
+          >
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold">File Explorer</h2>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline">
+                    <Download className="h-3 w-3 mr-1" />
+                    Project
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <ScrollArea className="flex-1 p-4">
+              <FileTree
+                nodes={fileTree}
+                onFileSelect={setSelectedFile}
+                selectedFileId={selectedFile?.id}
+              />
+            </ScrollArea>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Center Panel - Chat */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="p-4 border-b border-border">
+          <h1 className="text-xl font-bold">AI Development Agent</h1>
+          <p className="text-sm text-muted-foreground">Building full-stack applications autonomously</p>
+        </div>
+        <div className="flex-1">
+          <ChatInterface
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            isGenerating={isGenerating}
+          />
+        </div>
+      </div>
+
+      {/* Right Panel Toggle */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-40"
+        onClick={() => setRightPanelOpen(!rightPanelOpen)}
+      >
+        <ChevronLeft className={cn("h-4 w-4 transition-transform", rightPanelOpen && "rotate-180")} />
+      </Button>
+
+      {/* Right Panel - Preview & Timeline */}
+      <AnimatePresence>
+        {rightPanelOpen && (
+          <motion.div
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="w-80 bg-card border-l border-border flex flex-col z-30"
+          >
+            <div className="flex-1 flex flex-col">
+              {/* Preview Section */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-semibold">Preview</h2>
+                  <Button size="sm" variant="outline">
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                </div>
+                <Card>
+                  <CardContent className="p-4">
+                    {selectedFile ? (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Code className="h-4 w-4" />
+                          <span className="font-medium text-sm">{selectedFile.name}</span>
+                        </div>
+                        <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-32">
+                          {selectedFile.content || 'No content available'}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground text-sm">
+                        Select a file to preview
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Timeline Section */}
+              <div className="flex-1 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-semibold">Timeline</h2>
+                  <Button size="sm" variant="outline">
+                    <Download className="h-3 w-3 mr-1" />
+                    Export
+                  </Button>
+                </div>
+                <ScrollArea className="h-full">
+                  <Timeline steps={timelineSteps} />
+                </ScrollArea>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Live Ticker */}
+      <LiveTicker items={liveTickerItems} />
+
+      {/* Environment Spin-up Animation */}
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <Card className="p-8 text-center">
+              <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Spinning up environment...</h3>
+              <p className="text-muted-foreground">Setting up your development workspace</p>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export default AIAgentWorkspace

@@ -1,0 +1,966 @@
+"use client";
+
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Monitor,
+  Upload,
+  Image,
+  Mic,
+  Send,
+  Smile,
+  FileText,
+  FolderTree,
+  Terminal,
+  Code,
+  Eye,
+  Globe,
+  X,
+  Minimize2,
+  Maximize2,
+  Copy,
+  Paste,
+  MessageCircle,
+  Bot,
+  User,
+  Paperclip,
+  Camera,
+  File,
+  Volume2,
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Folder,
+  FileIcon,
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  Download,
+  Share2,
+  Zap,
+  Sparkles,
+  Brain,
+  Command,
+  Search,
+  Filter,
+  MoreHorizontal,
+  RefreshCw,
+  ExternalLink,
+  Layers,
+  Grid,
+  List,
+  SplitSquareHorizontal,
+  PanelLeftOpen,
+  PanelRightOpen,
+  PanelLeft,
+  PanelRight,
+  MousePointer2,
+  Move,
+  CornerDownLeft,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+
+// Utility function
+const cn = (...classes: (string | undefined | null | boolean)[]) => {
+  return classes.filter(Boolean).join(" ");
+};
+
+// Types
+interface Message {
+  id: string;
+  content: string;
+  role: "user" | "assistant";
+  timestamp: Date;
+  attachments?: Attachment[];
+}
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+}
+
+interface FileNode {
+  id: string;
+  name: string;
+  type: "file" | "folder";
+  children?: FileNode[];
+  content?: string;
+  path: string;
+}
+
+interface DraggableWindowProps {
+  children: React.ReactNode;
+  title: string;
+  onClose?: () => void;
+  onMinimize?: () => void;
+  onMaximize?: () => void;
+  className?: string;
+  defaultPosition?: { x: number; y: number };
+  defaultSize?: { width: number; height: number };
+  isMinimized?: boolean;
+  isMaximized?: boolean;
+}
+
+// Draggable Window Component
+const DraggableWindow: React.FC<DraggableWindowProps> = ({
+  children,
+  title,
+  onClose,
+  onMinimize,
+  onMaximize,
+  className = "",
+  defaultPosition = { x: 100, y: 100 },
+  defaultSize = { width: 400, height: 300 },
+  isMinimized = false,
+  isMaximized = false,
+}) => {
+  const [position, setPosition] = useState(defaultPosition);
+  const [size, setSize] = useState(defaultSize);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const windowRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.window-header')) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      });
+    }
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+
+  if (isMinimized) {
+    return (
+      <motion.div
+        className="fixed bottom-4 left-4 bg-purple-900/20 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-3 cursor-pointer"
+        onClick={onMaximize}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <div className="flex items-center gap-2 text-purple-300">
+          <Monitor className="w-4 h-4" />
+          <span className="text-sm">{title}</span>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={windowRef}
+      className={cn(
+        "fixed bg-black/40 backdrop-blur-2xl border border-purple-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/20",
+        isMaximized ? "inset-4" : "",
+        className
+      )}
+      style={
+        isMaximized
+          ? {}
+          : {
+              left: position.x,
+              top: position.y,
+              width: size.width,
+              height: size.height,
+            }
+      }
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+    >
+      {/* Window Header */}
+      <div
+        className="window-header flex items-center justify-between p-4 bg-gradient-to-r from-purple-900/30 to-purple-800/30 border-b border-purple-500/20 cursor-move"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 cursor-pointer" onClick={onClose} />
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 cursor-pointer" onClick={onMinimize} />
+            <div className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 cursor-pointer" onClick={onMaximize} />
+          </div>
+          <h3 className="text-purple-200 font-medium">{title}</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+            <Settings className="w-4 h-4 text-purple-300" />
+          </button>
+        </div>
+      </div>
+
+      {/* Window Content */}
+      <div className="flex-1 overflow-hidden">{children}</div>
+
+      {/* Resize Handle */}
+      {!isMaximized && (
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsResizing(true);
+          }}
+        >
+          <div className="absolute bottom-1 right-1 w-2 h-2 border-r-2 border-b-2 border-purple-500/50" />
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// File Tree Component
+const FileTree: React.FC<{ files: FileNode[]; onFileSelect: (file: FileNode) => void }> = ({ files, onFileSelect }) => {
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  const toggleFolder = (folderId: string) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderId)) {
+      newExpanded.delete(folderId);
+    } else {
+      newExpanded.add(folderId);
+    }
+    setExpandedFolders(newExpanded);
+  };
+
+  const renderFileNode = (node: FileNode, depth = 0) => (
+    <div key={node.id} className="select-none">
+      <div
+        className={cn(
+          "flex items-center gap-2 py-1 px-2 hover:bg-purple-500/10 rounded-lg cursor-pointer transition-colors",
+          `ml-${depth * 4}`
+        )}
+        onClick={() => {
+          if (node.type === "folder") {
+            toggleFolder(node.id);
+          } else {
+            onFileSelect(node);
+          }
+        }}
+      >
+        {node.type === "folder" ? (
+          <>
+            {expandedFolders.has(node.id) ? (
+              <ChevronDown className="w-4 h-4 text-purple-400" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-purple-400" />
+            )}
+            <Folder className="w-4 h-4 text-purple-400" />
+          </>
+        ) : (
+          <>
+            <div className="w-4" />
+            <FileIcon className="w-4 h-4 text-purple-300" />
+          </>
+        )}
+        <span className="text-sm text-purple-200">{node.name}</span>
+      </div>
+      {node.type === "folder" && expandedFolders.has(node.id) && node.children && (
+        <div>
+          {node.children.map((child) => renderFileNode(child, depth + 1))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-4 h-full overflow-y-auto">
+      <div className="flex items-center gap-2 mb-4">
+        <FolderTree className="w-5 h-5 text-purple-400" />
+        <h3 className="text-purple-200 font-medium">Project Files</h3>
+      </div>
+      <div className="space-y-1">
+        {files.map((file) => renderFileNode(file))}
+      </div>
+    </div>
+  );
+};
+
+// Code Editor Component
+const CodeEditor: React.FC<{ file: FileNode | null; onSave: (content: string) => void }> = ({ file, onSave }) => {
+  const [content, setContent] = useState(file?.content || "");
+  const [isModified, setIsModified] = useState(false);
+
+  useEffect(() => {
+    setContent(file?.content || "");
+    setIsModified(false);
+  }, [file]);
+
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    setIsModified(newContent !== (file?.content || ""));
+  };
+
+  const handleSave = () => {
+    onSave(content);
+    setIsModified(false);
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
+        <div className="flex items-center gap-2">
+          <Code className="w-5 h-5 text-purple-400" />
+          <span className="text-purple-200">{file?.name || "No file selected"}</span>
+          {isModified && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSave}
+            disabled={!isModified}
+            className="px-3 py-1 bg-purple-600/20 hover:bg-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm text-purple-200 transition-colors"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 p-4">
+        <textarea
+          value={content}
+          onChange={(e) => handleContentChange(e.target.value)}
+          className="w-full h-full bg-black/20 border border-purple-500/20 rounded-xl p-4 text-purple-100 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+          placeholder={file ? "Start coding..." : "Select a file to edit"}
+          disabled={!file}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Terminal Component
+const Terminal: React.FC = () => {
+  const [commands, setCommands] = useState<string[]>([
+    "$ npm install",
+    "$ npm run dev",
+    "Server running on http://localhost:3000",
+  ]);
+  const [currentCommand, setCurrentCommand] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentCommand.trim()) {
+      setCommands([...commands, `$ ${currentCommand}`, "Command executed successfully"]);
+      setCurrentCommand("");
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-black/40 rounded-xl">
+      <div className="flex items-center gap-2 p-4 border-b border-purple-500/20">
+        <Terminal className="w-5 h-5 text-purple-400" />
+        <span className="text-purple-200 font-medium">Terminal</span>
+      </div>
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-2 mb-4">
+          {commands.map((cmd, index) => (
+            <div key={index} className="text-green-400 font-mono text-sm">
+              {cmd}
+            </div>
+          ))}
+        </div>
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <span className="text-green-400 font-mono">$</span>
+          <input
+            type="text"
+            value={currentCommand}
+            onChange={(e) => setCurrentCommand(e.target.value)}
+            className="flex-1 bg-transparent text-green-400 font-mono text-sm focus:outline-none"
+            placeholder="Enter command..."
+          />
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Preview Component
+const Preview: React.FC = () => {
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center gap-2 p-4 border-b border-purple-500/20">
+        <Eye className="w-5 h-5 text-purple-400" />
+        <span className="text-purple-200 font-medium">Preview</span>
+        <div className="flex-1" />
+        <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+          <RefreshCw className="w-4 h-4 text-purple-300" />
+        </button>
+        <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+          <ExternalLink className="w-4 h-4 text-purple-300" />
+        </button>
+      </div>
+      <div className="flex-1 p-4">
+        <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Eye className="w-8 h-8 text-purple-600" />
+            </div>
+            <p className="text-gray-600">Preview will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Browser Component
+const Browser: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const [url, setUrl] = useState("https://example.com");
+
+  if (!isOpen) return null;
+
+  return (
+    <DraggableWindow
+      title="Shared Browser"
+      onClose={onClose}
+      defaultPosition={{ x: 200, y: 150 }}
+      defaultSize={{ width: 800, height: 600 }}
+    >
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b border-purple-500/20">
+          <div className="flex items-center gap-2 flex-1">
+            <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+              <ArrowLeft className="w-4 h-4 text-purple-300" />
+            </button>
+            <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+              <ArrowRight className="w-4 h-4 text-purple-300" />
+            </button>
+            <button className="p-1 hover:bg-purple-500/20 rounded-lg transition-colors">
+              <RefreshCw className="w-4 h-4 text-purple-300" />
+            </button>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="flex-1 bg-purple-900/20 border border-purple-500/30 rounded-xl px-3 py-2 text-purple-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+          </div>
+        </div>
+        <div className="flex-1 bg-white">
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center">
+              <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Browser content would load here</p>
+              <p className="text-sm text-gray-500 mt-2">Shared with AI agent via MCP</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </DraggableWindow>
+  );
+};
+
+// Chat Bubble Component
+const ChatBubble: React.FC<{ message: Message; isUser: boolean }> = ({ message, isUser }) => {
+  return (
+    <motion.div
+      className={cn("flex gap-3 mb-6", isUser ? "justify-end" : "justify-start")}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+    >
+      {!isUser && (
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0">
+          <Bot className="w-4 h-4 text-white" />
+        </div>
+      )}
+      
+      <div
+        className={cn(
+          "max-w-md px-4 py-3 rounded-3xl backdrop-blur-xl border",
+          isUser
+            ? "bg-purple-600/20 border-purple-500/30 text-purple-100"
+            : "bg-black/20 border-purple-500/20 text-purple-200"
+        )}
+      >
+        <p className="text-sm leading-relaxed">{message.content}</p>
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {message.attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                className="flex items-center gap-2 p-2 bg-purple-500/10 rounded-xl"
+              >
+                <FileText className="w-4 h-4 text-purple-400" />
+                <span className="text-xs text-purple-300">{attachment.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-2 text-xs text-purple-400">
+          {message.timestamp.toLocaleTimeString()}
+        </div>
+      </div>
+
+      {isUser && (
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 text-white" />
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// Main AI Agent Development Interface
+const AIAgentDevelopmentInterface: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      content: "Hello! I'm your AI development assistant. I can help you build, debug, and enhance your code. What would you like to work on today?",
+      role: "assistant",
+      timestamp: new Date(),
+    },
+  ]);
+  
+  const [inputValue, setInputValue] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [showSidebars, setShowSidebars] = useState(false);
+  const [showBrowser, setShowBrowser] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sample file structure
+  const [files] = useState<FileNode[]>([
+    {
+      id: "1",
+      name: "src",
+      type: "folder",
+      path: "/src",
+      children: [
+        {
+          id: "2",
+          name: "components",
+          type: "folder",
+          path: "/src/components",
+          children: [
+            {
+              id: "3",
+              name: "Button.tsx",
+              type: "file",
+              path: "/src/components/Button.tsx",
+              content: "import React from 'react';\n\ninterface ButtonProps {\n  children: React.ReactNode;\n  onClick?: () => void;\n}\n\nexport const Button: React.FC<ButtonProps> = ({ children, onClick }) => {\n  return (\n    <button\n      onClick={onClick}\n      className=\"px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600\"\n    >\n      {children}\n    </button>\n  );\n};",
+            },
+            {
+              id: "4",
+              name: "Header.tsx",
+              type: "file",
+              path: "/src/components/Header.tsx",
+              content: "import React from 'react';\n\nexport const Header: React.FC = () => {\n  return (\n    <header className=\"bg-gray-800 text-white p-4\">\n      <h1 className=\"text-xl font-bold\">My App</h1>\n    </header>\n  );\n};",
+            },
+          ],
+        },
+        {
+          id: "5",
+          name: "pages",
+          type: "folder",
+          path: "/src/pages",
+          children: [
+            {
+              id: "6",
+              name: "index.tsx",
+              type: "file",
+              path: "/src/pages/index.tsx",
+              content: "import React from 'react';\nimport { Header } from '../components/Header';\nimport { Button } from '../components/Button';\n\nconst HomePage: React.FC = () => {\n  return (\n    <div>\n      <Header />\n      <main className=\"p-4\">\n        <h2>Welcome to my app!</h2>\n        <Button onClick={() => alert('Hello!')}>Click me</Button>\n      </main>\n    </div>\n  );\n};\n\nexport default HomePage;",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "7",
+      name: "package.json",
+      type: "file",
+      path: "/package.json",
+      content: "{\n  \"name\": \"my-app\",\n  \"version\": \"1.0.0\",\n  \"dependencies\": {\n    \"react\": \"^18.0.0\",\n    \"react-dom\": \"^18.0.0\"\n  }\n}",
+    },
+  ]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (!inputValue.trim() && attachments.length === 0) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue,
+      role: "user",
+      timestamp: new Date(),
+      attachments: attachments.length > 0 ? attachments : undefined,
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setInputValue("");
+    setAttachments([]);
+
+    // Simulate AI response
+    setIsTyping(true);
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I understand you want to work on that. Let me help you with the implementation. I can see your project structure and will assist you accordingly.",
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 2000);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      Array.from(files).forEach((file) => {
+        const attachment: Attachment = {
+          id: Date.now().toString() + Math.random(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+        };
+        setAttachments((prev) => [...prev, attachment]);
+      });
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files) {
+      Array.from(files).forEach((file) => {
+        const attachment: Attachment = {
+          id: Date.now().toString() + Math.random(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+        };
+        setAttachments((prev) => [...prev, attachment]);
+      });
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const attachment: Attachment = {
+            id: Date.now().toString() + Math.random(),
+            name: `pasted-image-${Date.now()}.png`,
+            type: file.type,
+            size: file.size,
+            url: URL.createObjectURL(file),
+          };
+          setAttachments((prev) => [...prev, attachment]);
+        }
+      }
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((att) => att.id !== id));
+  };
+
+  const handleFileSelect = (file: FileNode) => {
+    setSelectedFile(file);
+  };
+
+  const handleFileSave = (content: string) => {
+    if (selectedFile) {
+      selectedFile.content = content;
+      // In a real app, you'd save this to your backend
+      console.log("File saved:", selectedFile.path, content);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900/20 via-black to-indigo-900/20 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full mix-blend-normal filter blur-[128px] animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full mix-blend-normal filter blur-[128px] animate-pulse delay-700" />
+        <div className="absolute top-1/4 right-1/3 w-64 h-64 bg-fuchsia-500/10 rounded-full mix-blend-normal filter blur-[96px] animate-pulse delay-1000" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between p-6 border-b border-purple-500/20 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-purple-100">AI Agent Builder</h1>
+              <p className="text-sm text-purple-400">Code Development Environment</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <motion.button
+            onClick={() => setShowBrowser(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-2xl text-purple-200 transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Globe className="w-4 h-4" />
+            <span>Browser</span>
+          </motion.button>
+          
+          <motion.button
+            onClick={() => setShowSidebars(!showSidebars)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-2xl text-purple-200 transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Monitor className="w-4 h-4" />
+            <span>Dev Tools</span>
+          </motion.button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex h-[calc(100vh-88px)]">
+        {/* Left Sidebar */}
+        <AnimatePresence>
+          {showSidebars && (
+            <motion.div
+              className="w-80 border-r border-purple-500/20 backdrop-blur-xl bg-black/20"
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            >
+              <div className="h-1/2 border-b border-purple-500/20">
+                <FileTree files={files} onFileSelect={handleFileSelect} />
+              </div>
+              <div className="h-1/2">
+                <Terminal />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto p-6 space-y-4"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+          >
+            {messages.map((message) => (
+              <ChatBubble
+                key={message.id}
+                message={message}
+                isUser={message.role === "user"}
+              />
+            ))}
+            
+            {isTyping && (
+              <motion.div
+                className="flex gap-3 mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-black/20 border border-purple-500/20 rounded-3xl px-4 py-3">
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2 bg-purple-400 rounded-full"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="p-6 border-t border-purple-500/20 backdrop-blur-xl">
+            {/* Attachments Preview */}
+            {attachments.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {attachments.map((attachment) => (
+                  <motion.div
+                    key={attachment.id}
+                    className="flex items-center gap-2 bg-purple-600/20 border border-purple-500/30 rounded-2xl px-3 py-2"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <FileText className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm text-purple-200">{attachment.name}</span>
+                    <button
+                      onClick={() => removeAttachment(attachment.id)}
+                      className="text-purple-400 hover:text-purple-200"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Input Box */}
+            <div className="relative">
+              <div className="flex items-end gap-4 bg-black/40 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-4">
+                <div className="flex-1">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onPaste={handlePaste}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder="Ask your AI agent anything about code development..."
+                    className="w-full bg-transparent text-purple-100 placeholder-purple-400 resize-none focus:outline-none"
+                    rows={1}
+                    style={{ minHeight: "24px", maxHeight: "120px" }}
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.txt,.js,.jsx,.ts,.tsx,.py,.html,.css,.json"
+                  />
+                  
+                  <motion.button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Paperclip className="w-5 h-5 text-purple-400" />
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Image className="w-5 h-5 text-purple-400" />
+                  </motion.button>
+                  
+                  <motion.button
+                    className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Smile className="w-5 h-5 text-purple-400" />
+                  </motion.button>
+                  
+                  <motion.button
+                    className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Mic className="w-5 h-5 text-purple-400" />
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() && attachments.length === 0}
+                    className="p-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Send className="w-5 h-5 text-white" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <AnimatePresence>
+          {showSidebars && (
+            <motion.div
+              className="w-80 border-l border-purple-500/20 backdrop-blur-xl bg-black/20"
+              initial={{ x: 320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 320, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            >
+              <div className="h-1/2 border-b border-purple-500/20">
+                <CodeEditor file={selectedFile} onSave={handleFileSave} />
+              </div>
+              <div className="h-1/2">
+                <Preview />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Browser Modal */}
+      <Browser isOpen={showBrowser} onClose={() => setShowBrowser(false)} />
+    </div>
+  );
+};
+
+export default AIAgentDevelopmentInterface;

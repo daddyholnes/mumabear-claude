@@ -112,5 +112,4 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tool
 export type { TooltipProviderProps, TooltipContentProps } from './tooltip'
 
 // Advanced Components
-export { AgentPlan } from './AgentPlan'
-export type { AgentPlanProps } from './AgentPlan'
+export { default as AgentPlan } from './AgentPlan'

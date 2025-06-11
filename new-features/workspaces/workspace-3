@@ -1,0 +1,546 @@
+"use client";
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Computer, 
+  Upload, 
+  Image as ImageIcon, 
+  Smile, 
+  Mic, 
+  Send, 
+  X, 
+  FileText, 
+  Terminal, 
+  Eye, 
+  Globe,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown,
+  File,
+  Folder,
+  Play
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface DraggableProps {
+  children: React.ReactNode;
+  className?: string;
+  onDrag?: (x: number, y: number) => void;
+}
+
+const Draggable: React.FC<DraggableProps> = ({ children, className, onDrag }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    setPosition({ x: newX, y: newY });
+    onDrag?.(newX, newY);
+  }, [isDragging, dragStart, onDrag]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  return (
+    <div
+      ref={elementRef}
+      className={cn("absolute", className)}
+      style={{
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        cursor: isDragging ? 'grabbing' : 'grab',
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      {children}
+    </div>
+  );
+};
+
+interface FileTreeNode {
+  name: string;
+  type: 'file' | 'folder';
+  children?: FileTreeNode[];
+  content?: string;
+}
+
+const FileTreeItem: React.FC<{
+  node: FileTreeNode;
+  level: number;
+  onSelect: (node: FileTreeNode) => void;
+}> = ({ node, level, onSelect }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div>
+      <div
+        className="flex items-center gap-2 px-2 py-1 hover:bg-purple-500/10 cursor-pointer rounded-lg transition-colors"
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        onClick={() => {
+          if (node.type === 'folder') {
+            setIsExpanded(!isExpanded);
+          } else {
+            onSelect(node);
+          }
+        }}
+      >
+        {node.type === 'folder' ? (
+          <>
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4 text-purple-300" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-purple-300" />
+            )}
+            <Folder className="w-4 h-4 text-purple-400" />
+          </>
+        ) : (
+          <>
+            <div className="w-4" />
+            <File className="w-4 h-4 text-purple-300" />
+          </>
+        )}
+        <span className="text-sm text-purple-100">{node.name}</span>
+      </div>
+      {node.type === 'folder' && isExpanded && node.children && (
+        <div>
+          {node.children.map((child, index) => (
+            <FileTreeItem
+              key={index}
+              node={child}
+              level={level + 1}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const FileTree: React.FC<{
+  onFileSelect: (file: FileTreeNode) => void;
+}> = ({ onFileSelect }) => {
+  const fileStructure: FileTreeNode[] = [
+    {
+      name: 'src',
+      type: 'folder',
+      children: [
+        {
+          name: 'components',
+          type: 'folder',
+          children: [
+            { name: 'Button.tsx', type: 'file', content: 'export const Button = () => {\n  return <button>Click me</button>;\n};' },
+            { name: 'Input.tsx', type: 'file', content: 'export const Input = () => {\n  return <input placeholder="Enter text" />;\n};' }
+          ]
+        },
+        { name: 'App.tsx', type: 'file', content: 'import React from "react";\n\nfunction App() {\n  return (\n    <div className="App">\n      <h1>Hello World</h1>\n    </div>\n  );\n}\n\nexport default App;' }
+      ]
+    },
+    { name: 'package.json', type: 'file', content: '{\n  "name": "my-app",\n  "version": "1.0.0",\n  "dependencies": {\n    "react": "^18.0.0"\n  }\n}' }
+  ];
+
+  return (
+    <div className="p-4">
+      <h3 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
+        <FolderOpen className="w-4 h-4" />
+        File Explorer
+      </h3>
+      <div className="space-y-1">
+        {fileStructure.map((node, index) => (
+          <FileTreeItem
+            key={index}
+            node={node}
+            level={0}
+            onSelect={onFileSelect}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CodeEditor: React.FC<{
+  file: FileTreeNode | null;
+}> = ({ file }) => {
+  return (
+    <div className="p-4 h-full flex flex-col">
+      <h3 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
+        <FileText className="w-4 h-4" />
+        {file ? file.name : 'No file selected'}
+      </h3>
+      <div className="flex-1 bg-black/30 rounded-lg p-4 font-mono text-sm overflow-auto">
+        <pre className="text-purple-100 whitespace-pre-wrap">
+          {file?.content || '// Select a file to view its content'}
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+const Terminal: React.FC = () => {
+  const [commands, setCommands] = useState<string[]>([
+    '$ npm install',
+    'Installing dependencies...',
+    '$ npm run dev',
+    'Server running on http://localhost:3000'
+  ]);
+
+  return (
+    <div className="p-4 h-full flex flex-col">
+      <h3 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
+        <Terminal className="w-4 h-4" />
+        Terminal
+      </h3>
+      <div className="flex-1 bg-black/50 rounded-lg p-4 font-mono text-sm overflow-auto">
+        {commands.map((cmd, index) => (
+          <div key={index} className="text-green-400 mb-1">
+            {cmd}
+          </div>
+        ))}
+        <div className="flex items-center text-green-400">
+          <span>$ </span>
+          <div className="w-2 h-4 bg-green-400 ml-1 animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Preview: React.FC = () => {
+  return (
+    <div className="p-4 h-full flex flex-col">
+      <h3 className="text-purple-200 font-medium mb-3 flex items-center gap-2">
+        <Eye className="w-4 h-4" />
+        Preview
+      </h3>
+      <div className="flex-1 bg-white rounded-lg p-4 overflow-auto">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Hello World</h1>
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Click me
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WebBrowser: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <Draggable className="z-50">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        className="w-[800px] h-[600px] bg-gradient-to-br from-purple-900/90 to-indigo-900/90 backdrop-blur-xl rounded-3xl border border-purple-400/30 shadow-2xl shadow-purple-500/20"
+      >
+        <div className="flex items-center justify-between p-4 border-b border-purple-400/20">
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-purple-300" />
+            <span className="text-purple-200 font-medium">Shared Browser</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-purple-500/20 rounded-full transition-colors"
+          >
+            <X className="w-4 h-4 text-purple-300" />
+          </button>
+        </div>
+        <div className="p-4">
+          <div className="bg-black/30 rounded-lg p-4 h-[500px] flex items-center justify-center">
+            <div className="text-center text-purple-200">
+              <Globe className="w-16 h-16 mx-auto mb-4 text-purple-400" />
+              <p>Shared web browser with AI agent</p>
+              <p className="text-sm text-purple-400 mt-2">MCP browser tools enabled</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </Draggable>
+  );
+};
+
+const ChatBubble: React.FC<{
+  message: string;
+  isUser: boolean;
+  timestamp: Date;
+}> = ({ message, isUser, timestamp }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      className={cn(
+        "flex mb-4",
+        isUser ? "justify-end" : "justify-start"
+      )}
+    >
+      <div
+        className={cn(
+          "max-w-[70%] p-4 rounded-3xl backdrop-blur-xl border shadow-lg",
+          isUser
+            ? "bg-gradient-to-r from-purple-600/80 to-indigo-600/80 border-purple-400/30 text-white"
+            : "bg-gradient-to-r from-gray-800/80 to-gray-700/80 border-gray-600/30 text-gray-100"
+        )}
+      >
+        <p className="text-sm leading-relaxed">{message}</p>
+        <p className="text-xs opacity-60 mt-2">
+          {timestamp.toLocaleTimeString()}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function AIAgentCodeBuilder() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [browserOpen, setBrowserOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileTreeNode | null>(null);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([
+    { text: "Hello! I'm your AI coding assistant. How can I help you build something amazing today?", isUser: false, timestamp: new Date() }
+  ]);
+
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+
+    setMessages(prev => [...prev, {
+      text: message,
+      isUser: true,
+      timestamp: new Date()
+    }]);
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        text: "I understand you want to work on that. Let me help you implement it step by step.",
+        isUser: false,
+        timestamp: new Date()
+      }]);
+    }, 1000);
+
+    setMessage("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleFileUpload = () => {
+    console.log("File upload triggered");
+  };
+
+  const handleImageUpload = () => {
+    console.log("Image upload triggered");
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-black relative overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0">
+        {[...Array(50)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.3, 0.8, 0.3],
+            }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 p-4 border-b border-purple-400/20 backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent">
+            AI Agent Code Builder
+          </h1>
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setBrowserOpen(true)}
+              className="p-3 bg-gradient-to-r from-purple-600/50 to-indigo-600/50 hover:from-purple-500/60 hover:to-indigo-500/60 rounded-2xl border border-purple-400/30 backdrop-blur-xl transition-all shadow-lg shadow-purple-500/20"
+            >
+              <Globe className="w-5 h-5 text-purple-200" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-3 bg-gradient-to-r from-purple-600/50 to-indigo-600/50 hover:from-purple-500/60 hover:to-indigo-500/60 rounded-2xl border border-purple-400/30 backdrop-blur-xl transition-all shadow-lg shadow-purple-500/20"
+            >
+              <Computer className="w-5 h-5 text-purple-200" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex h-[calc(100vh-80px)]">
+        {/* Left Sidebar */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ x: -400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -400, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-80 bg-gradient-to-b from-purple-900/40 to-indigo-900/40 backdrop-blur-xl border-r border-purple-400/20"
+            >
+              <div className="h-1/2 border-b border-purple-400/20">
+                <FileTree onFileSelect={setSelectedFile} />
+              </div>
+              <div className="h-1/2">
+                <Terminal />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 p-6 overflow-y-auto">
+            <div className="max-w-4xl mx-auto">
+              {messages.map((msg, index) => (
+                <ChatBubble
+                  key={index}
+                  message={msg.text}
+                  isUser={msg.isUser}
+                  timestamp={msg.timestamp}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Chat Input */}
+          <div className="p-6 border-t border-purple-400/20 backdrop-blur-xl">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 backdrop-blur-xl rounded-3xl border border-purple-400/30 p-4 shadow-2xl shadow-purple-500/20">
+                <div className="flex items-end gap-4">
+                  <div className="flex-1">
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask your AI agent to help with code..."
+                      className="w-full bg-transparent text-purple-100 placeholder-purple-300/50 resize-none outline-none min-h-[60px] max-h-32"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleFileUpload}
+                      className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    >
+                      <Upload className="w-5 h-5 text-purple-300" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleImageUpload}
+                      className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    >
+                      <ImageIcon className="w-5 h-5 text-purple-300" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    >
+                      <Smile className="w-5 h-5 text-purple-300" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 hover:bg-purple-500/20 rounded-xl transition-colors"
+                    >
+                      <Mic className="w-5 h-5 text-purple-300" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleSendMessage}
+                      disabled={!message.trim()}
+                      className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-purple-500/20"
+                    >
+                      <Send className="w-5 h-5 text-white" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ x: 400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 400, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-80 bg-gradient-to-b from-purple-900/40 to-indigo-900/40 backdrop-blur-xl border-l border-purple-400/20"
+            >
+              <div className="h-1/2 border-b border-purple-400/20">
+                <CodeEditor file={selectedFile} />
+              </div>
+              <div className="h-1/2">
+                <Preview />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Web Browser Modal */}
+      <WebBrowser isOpen={browserOpen} onClose={() => setBrowserOpen(false)} />
+    </div>
+  );
+}

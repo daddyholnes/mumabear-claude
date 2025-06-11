@@ -1,0 +1,21 @@
+# Express Mode Core Dependencies (Available)
+google-generativeai>=0.7.0
+google-cloud-aiplatform>=1.40.0
+google-auth>=2.22.0
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.100.0
+
+# Enhanced async and performance
+aiofiles>=23.1.0
+asyncio-throttle>=1.0.2
+
+# Monitoring and metrics  
+structlog>=23.1.0
+
+# Workflow patterns (open source alternatives)
+langchain>=0.1.0
+langchain-google-genai>=1.0.0
+
+# Performance optimization
+pydantic>=2.0.0
+tenacity>=8.2.0

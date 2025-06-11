@@ -36,7 +36,7 @@ export const ComponentIntegrationTest: React.FC = () => {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Test 2: Sanctuary Layout</h2>
         <div className="h-96 border rounded-lg overflow-hidden">
-          <SanctuaryLayout currentPage="Component Test">
+          <SanctuaryLayout>
             <div className="p-8 text-center">
               <h3 className="text-xl font-semibold mb-4">Layout Test Content</h3>
               <p>This tests the sanctuary layout with navigation and theming.</p>

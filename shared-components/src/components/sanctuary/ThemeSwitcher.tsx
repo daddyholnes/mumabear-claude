@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Moon, Sun, Brain, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
@@ -141,7 +141,7 @@ export function ThemeSwitcher({
           aria-label={`Toggle theme. Current theme: ${currentTheme.label}`}
           whileTap={{ scale: 0.95 }}
         >
-          <Icon className="h-4 w-4" />
+          {React.createElement(currentTheme.icon, { className: "h-4 w-4" })}
         </motion.button>
         
         <div className="hidden sm:block">

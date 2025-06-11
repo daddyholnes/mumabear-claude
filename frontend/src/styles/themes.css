@@ -1,0 +1,392 @@
+/* ====================================
+   🎭 PODPLAY SANCTUARY THEME SYSTEM
+   ================================== */
+
+/* Base CSS Custom Properties for Theme System */
+:root {
+  /* ====================================
+     SEMANTIC COLORS (Universal)
+     ================================== */
+  --sanctuary-success: #22c55e;
+  --sanctuary-warning: #eab308;
+  --sanctuary-error: #ef4444;
+  --sanctuary-info: #3b82f6;
+  
+  /* Default theme (Sanctuary) variables */
+  --sanctuary-background: #f8fdf9;
+  --sanctuary-foreground: #2c3e2f;
+  --sanctuary-primary: #4a7c59;
+  --sanctuary-primary-foreground: #ffffff;
+  --sanctuary-secondary: #7ba185;
+  --sanctuary-secondary-foreground: #2c3e2f;
+  --sanctuary-accent: #98fb98;
+  --sanctuary-accent-foreground: #2c3e2f;
+  --sanctuary-muted: #e8f5e8;
+  --sanctuary-muted-foreground: #5d8a6b;
+  --sanctuary-border: #d4f1d4;
+  --sanctuary-card: rgba(255, 255, 255, 0.95);
+  --sanctuary-card-foreground: #2c3e2f;
+}
+
+/* ====================================
+   THEME SWITCHING SYSTEM
+   ================================== */
+
+/* Sanctuary Theme (Default) */
+[data-theme="sanctuary"] {
+  --sanctuary-background: #f8fdf9;
+  --sanctuary-foreground: #2c3e2f;
+  --sanctuary-primary: #4a7c59;
+  --sanctuary-primary-foreground: #ffffff;
+  --sanctuary-secondary: #7ba185;
+  --sanctuary-secondary-foreground: #2c3e2f;
+  --sanctuary-accent: #98fb98;
+  --sanctuary-accent-foreground: #2c3e2f;
+  --sanctuary-muted: #e8f5e8;
+  --sanctuary-muted-foreground: #5d8a6b;
+  --sanctuary-border: #d4f1d4;
+  --sanctuary-card: rgba(255, 255, 255, 0.95);
+  --sanctuary-card-foreground: #2c3e2f;
+  
+  background: linear-gradient(135deg, #f8fdf9 0%, #e8f5e8 50%, #d4f1d4 100%);
+  color: var(--sanctuary-foreground);
+}
+
+/* Daytime Theme */
+[data-theme="daytime"] {
+  --sanctuary-background: #f0f8ff;
+  --sanctuary-foreground: #1565c0;
+  --sanctuary-primary: #4fc3f7;
+  --sanctuary-primary-foreground: #ffffff;
+  --sanctuary-secondary: #fff176;
+  --sanctuary-secondary-foreground: #1565c0;
+  --sanctuary-accent: #aed581;
+  --sanctuary-accent-foreground: #1565c0;
+  --sanctuary-muted: #e1f5fe;
+  --sanctuary-muted-foreground: #0277bd;
+  --sanctuary-border: #b3e5fc;
+  --sanctuary-card: rgba(255, 255, 255, 0.98);
+  --sanctuary-card-foreground: #1565c0;
+  
+  background: linear-gradient(to bottom, #87ceeb 0%, #f0f8ff 50%, #fff8dc 100%);
+  color: var(--sanctuary-foreground);
+}
+
+/* Night Theme */
+[data-theme="night"] {
+  --sanctuary-background: #0a0e27;
+  --sanctuary-foreground: #e0e6ed;
+  --sanctuary-primary: #1b263b;
+  --sanctuary-primary-foreground: #e0e6ed;
+  --sanctuary-secondary: #778da9;
+  --sanctuary-secondary-foreground: #e0e6ed;
+  --sanctuary-accent: #b0c4de;
+  --sanctuary-accent-foreground: #0a0e27;
+  --sanctuary-muted: #1b263b;
+  --sanctuary-muted-foreground: #94a3b8;
+  --sanctuary-border: #415a77;
+  --sanctuary-card: rgba(15, 25, 45, 0.95);
+  --sanctuary-card-foreground: #e0e6ed;
+  
+  background: linear-gradient(to bottom, #0a0e27 0%, #1b263b 50%, #0d1b2a 100%);
+  color: var(--sanctuary-foreground);
+}
+
+/* Purple Haze Theme */
+[data-theme="purple-haze"] {
+  --sanctuary-background: #1a0033;
+  --sanctuary-foreground: #e1bee7;
+  --sanctuary-primary: #6a1b9a;
+  --sanctuary-primary-foreground: #ffffff;
+  --sanctuary-secondary: #8e24aa;
+  --sanctuary-secondary-foreground: #ffffff;
+  --sanctuary-accent: #f8bbd9;
+  --sanctuary-accent-foreground: #4a148c;
+  --sanctuary-muted: rgba(74, 20, 140, 0.1);
+  --sanctuary-muted-foreground: #ce93d8;
+  --sanctuary-border: rgba(206, 147, 216, 0.3);
+  --sanctuary-card: rgba(74, 20, 140, 0.15);
+  --sanctuary-card-foreground: #e1bee7;
+  
+  background: linear-gradient(45deg, #1a0033 0%, #4a148c 25%, #7b1fa2 50%, #4a148c 75%, #1a0033 100%);
+  color: var(--sanctuary-foreground);
+}
+
+/* Cosmic Purple Theme */
+[data-theme="cosmic-purple"] {
+  --sanctuary-background: #0a0015;
+  --sanctuary-foreground: #dda0dd;
+  --sanctuary-primary: #330066;
+  --sanctuary-primary-foreground: #ffffff;
+  --sanctuary-secondary: #663399;
+  --sanctuary-secondary-foreground: #ffffff;
+  --sanctuary-accent: #da70d6;
+  --sanctuary-accent-foreground: #1a0033;
+  --sanctuary-muted: rgba(75, 0, 130, 0.15);
+  --sanctuary-muted-foreground: #c8a2c8;
+  --sanctuary-border: rgba(153, 50, 204, 0.3);
+  --sanctuary-card: rgba(75, 0, 130, 0.2);
+  --sanctuary-card-foreground: #dda0dd;
+  
+  background: radial-gradient(ellipse at center, #330066 0%, #1a0033 50%, #0a0015 100%);
+  color: var(--sanctuary-foreground);
+}
+
+/* ====================================
+   ACCESSIBILITY ENHANCEMENTS
+   ================================== */
+
+/* High Contrast Mode */
+[data-high-contrast="true"] {
+  --sanctuary-border: currentColor;
+}
+
+[data-high-contrast="true"] * {
+  border-color: currentColor !important;
+  outline: 1px solid currentColor;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Font Size Scaling */
+[data-font-size="small"] {
+  font-size: 0.875rem !important;
+}
+
+[data-font-size="medium"] {
+  font-size: 1rem !important;
+}
+
+[data-font-size="large"] {
+  font-size: 1.125rem !important;
+}
+
+[data-font-size="extra-large"] {
+  font-size: 1.25rem !important;
+}
+
+/* ====================================
+   THEME TRANSITION ANIMATIONS
+   ================================== */
+
+:root {
+  transition: 
+    background 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  transition: 
+    background 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  transition: 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ====================================
+   THEME-SPECIFIC BACKGROUND ANIMATIONS
+   ================================== */
+
+/* Sanctuary Theme - Gentle nature animations */
+[data-theme="sanctuary"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(143, 188, 143, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(152, 251, 152, 0.1) 0%, transparent 50%);
+  animation: gentle-nature 8s ease-in-out infinite;
+}
+
+/* Daytime Theme - Bright, energetic animations */
+[data-theme="daytime"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 119, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(79, 195, 247, 0.1) 0%, transparent 50%);
+  animation: daylight-dance 6s ease-in-out infinite;
+}
+
+/* Night Theme - Subtle starfield animations */
+[data-theme="night"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(2px 2px at 20px 30px, rgba(176, 196, 222, 0.3), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(176, 196, 222, 0.2), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(176, 196, 222, 0.4), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(176, 196, 222, 0.3), transparent);
+  background-repeat: repeat;
+  background-size: 150px 100px;
+  animation: starfield-twinkle 4s ease-in-out infinite;
+}
+
+/* Purple Haze Theme - Mystical mist animations */
+[data-theme="purple-haze"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(ellipse at 25% 60%, rgba(138, 43, 226, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse at 75% 30%, rgba(106, 27, 154, 0.1) 0%, transparent 70%);
+  animation: purple-mist-drift 10s ease-in-out infinite;
+}
+
+/* Cosmic Purple Theme - Space nebula animations */
+[data-theme="cosmic-purple"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(ellipse 400px 300px at 25% 40%, rgba(153, 50, 204, 0.2) 0%, transparent 70%),
+    radial-gradient(ellipse 300px 400px at 75% 70%, rgba(75, 0, 130, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 200px 200px at 50% 20%, rgba(218, 112, 214, 0.1) 0%, transparent 70%);
+  animation: cosmic-nebula-drift 15s linear infinite;
+}
+
+/* ====================================
+   KEYFRAME ANIMATIONS
+   ================================== */
+
+@keyframes gentle-nature {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateY(-10px) rotate(1deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes daylight-dance {
+  0%, 100% { 
+    transform: scale(1) translateX(0px);
+    opacity: 0.4;
+  }
+  33% { 
+    transform: scale(1.1) translateX(5px);
+    opacity: 0.6;
+  }
+  66% { 
+    transform: scale(0.9) translateX(-5px);
+    opacity: 0.5;
+  }
+}
+
+@keyframes starfield-twinkle {
+  0%, 100% { opacity: 0.3; }
+  25% { opacity: 0.8; }
+  50% { opacity: 0.1; }
+  75% { opacity: 0.6; }
+}
+
+@keyframes purple-mist-drift {
+  0%, 100% { 
+    transform: translateX(0px) translateY(0px) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: translateX(20px) translateY(-15px) scale(1.1);
+    opacity: 0.4;
+  }
+  66% { 
+    transform: translateX(-15px) translateY(10px) scale(0.9);
+    opacity: 0.7;
+  }
+}
+
+@keyframes cosmic-nebula-drift {
+  0% { 
+    transform: rotate(0deg) translateX(0px);
+    opacity: 0.5;
+  }
+  25% { 
+    transform: rotate(90deg) translateX(10px);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: rotate(180deg) translateX(0px);
+    opacity: 0.4;
+  }
+  75% { 
+    transform: rotate(270deg) translateX(-10px);
+    opacity: 0.6;
+  }
+  100% { 
+    transform: rotate(360deg) translateX(0px);
+    opacity: 0.5;
+  }
+}
+
+/* ====================================
+   UTILITY CLASSES FOR THEME COLORS
+   ================================== */
+
+.bg-sanctuary-primary { background-color: var(--sanctuary-primary); }
+.bg-sanctuary-secondary { background-color: var(--sanctuary-secondary); }
+.bg-sanctuary-accent { background-color: var(--sanctuary-accent); }
+.bg-sanctuary-muted { background-color: var(--sanctuary-muted); }
+.bg-sanctuary-card { background-color: var(--sanctuary-card); }
+
+.text-sanctuary-primary { color: var(--sanctuary-primary); }
+.text-sanctuary-secondary { color: var(--sanctuary-secondary); }
+.text-sanctuary-accent { color: var(--sanctuary-accent); }
+.text-sanctuary-muted { color: var(--sanctuary-muted-foreground); }
+.text-sanctuary-foreground { color: var(--sanctuary-foreground); }
+
+.border-sanctuary-primary { border-color: var(--sanctuary-primary); }
+.border-sanctuary-secondary { border-color: var(--sanctuary-secondary); }
+.border-sanctuary-accent { border-color: var(--sanctuary-accent); }
+.border-sanctuary { border-color: var(--sanctuary-border); }

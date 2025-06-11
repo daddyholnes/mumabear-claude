@@ -108,7 +108,11 @@ const SheetContent = React.forwardRef<
         if (neurodivergentMode) {
           e.preventDefault()
           setTimeout(() => {
-            e.currentTarget.click()
+            // Find the close button and trigger it
+            const closeButton = document.querySelector('[data-radix-collection-item]')
+            if (closeButton && 'click' in closeButton) {
+              (closeButton as HTMLElement).click()
+            }
           }, 300)
         }
       }}

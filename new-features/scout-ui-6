@@ -1,0 +1,807 @@
+"use client";
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronRight,
+  Folder,
+  File,
+  FolderOpen,
+  Download,
+  Play,
+  Pause,
+  Code,
+  Eye,
+  Clock,
+  MessageCircle,
+  Send,
+  Paperclip,
+  Mic,
+  Image,
+  Upload,
+  X,
+  PanelLeftOpen,
+  PanelRightOpen,
+  Check,
+  Circle,
+  Bot,
+  User,
+  Zap,
+  Activity,
+  Globe,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+// Types
+interface FileNode {
+  id: string;
+  name: string;
+  type: "file" | "folder";
+  children?: FileNode[];
+  content?: string;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  sender: "user" | "ai";
+  timestamp: Date;
+  type?: "text" | "image" | "file";
+}
+
+interface TimelineStep {
+  id: string;
+  title: string;
+  description: string;
+  status: "pending" | "running" | "completed" | "error";
+  timestamp: Date;
+  details?: string;
+}
+
+interface Theme {
+  name: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+}
+
+// File Tree Component
+const FileTreeItem: React.FC<{
+  node: FileNode;
+  level: number;
+  onFileSelect: (file: FileNode) => void;
+  selectedFile?: FileNode;
+}> = ({ node, level, onFileSelect, selectedFile }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="select-none">
+      <div
+        className={cn(
+          "flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-muted/50 transition-colors",
+          selectedFile?.id === node.id && "bg-muted"
+        )}
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        onClick={() => {
+          if (node.type === "folder") {
+            setIsOpen(!isOpen);
+          } else {
+            onFileSelect(node);
+          }
+        }}
+      >
+        {node.type === "folder" && (
+          <motion.div
+            animate={{ rotate: isOpen ? 90 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </motion.div>
+        )}
+        {node.type === "folder" ? (
+          isOpen ? (
+            <FolderOpen className="w-4 h-4 text-blue-500" />
+          ) : (
+            <Folder className="w-4 h-4 text-blue-500" />
+          )
+        ) : (
+          <File className="w-4 h-4 text-muted-foreground" />
+        )}
+        <span className="text-sm truncate">{node.name}</span>
+      </div>
+      <AnimatePresence>
+        {isOpen && node.children && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            {node.children.map((child) => (
+              <FileTreeItem
+                key={child.id}
+                node={child}
+                level={level + 1}
+                onFileSelect={onFileSelect}
+                selectedFile={selectedFile}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Chat Bubble Component
+const ChatBubble: React.FC<{
+  message: Message;
+  isLoading?: boolean;
+}> = ({ message, isLoading }) => {
+  const isUser = message.sender === "user";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "flex gap-3 max-w-[80%]",
+        isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+      )}
+    >
+      <Avatar className="w-8 h-8 shrink-0">
+        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+      </Avatar>
+      <div
+        className={cn(
+          "rounded-lg px-4 py-2 text-sm",
+          isUser
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground"
+        )}
+      >
+        {isLoading ? (
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-current rounded-full opacity-60"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          message.content
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Timeline Component
+const TimelineItem: React.FC<{ step: TimelineStep; isLast: boolean }> = ({
+  step,
+  isLast,
+}) => {
+  const getStatusIcon = () => {
+    switch (step.status) {
+      case "completed":
+        return <Check className="w-4 h-4 text-green-500" />;
+      case "running":
+        return (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Activity className="w-4 h-4 text-blue-500" />
+          </motion.div>
+        );
+      case "error":
+        return <X className="w-4 h-4 text-red-500" />;
+      default:
+        return <Circle className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (step.status) {
+      case "completed":
+        return "border-green-500 bg-green-500";
+      case "running":
+        return "border-blue-500 bg-blue-500";
+      case "error":
+        return "border-red-500 bg-red-500";
+      default:
+        return "border-muted-foreground bg-background";
+    }
+  };
+
+  return (
+    <div className="flex gap-4">
+      <div className="flex flex-col items-center">
+        <div
+          className={cn(
+            "w-8 h-8 rounded-full border-2 flex items-center justify-center",
+            getStatusColor()
+          )}
+        >
+          {getStatusIcon()}
+        </div>
+        {!isLast && (
+          <div
+            className={cn(
+              "w-0.5 h-16 mt-2",
+              step.status === "completed" ? "bg-green-500" : "bg-muted"
+            )}
+          />
+        )}
+      </div>
+      <div className="flex-1 pb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <h4 className="font-medium text-sm">{step.title}</h4>
+          <Badge
+            variant={
+              step.status === "completed"
+                ? "default"
+                : step.status === "running"
+                ? "secondary"
+                : "outline"
+            }
+            className="text-xs"
+          >
+            {step.status}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground mb-2">{step.description}</p>
+        <p className="text-xs text-muted-foreground">
+          {step.timestamp.toLocaleTimeString()}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Live Ticker Component
+const LiveTicker: React.FC<{ steps: TimelineStep[] }> = ({ steps }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const runningSteps = steps.filter((step) => step.status === "running");
+  const latestStep = runningSteps[runningSteps.length - 1];
+
+  useEffect(() => {
+    if (runningSteps.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentStep((prev) => (prev + 1) % runningSteps.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [runningSteps.length]);
+
+  if (!latestStep) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed bottom-4 right-4 bg-background border rounded-lg p-3 shadow-lg max-w-xs"
+    >
+      <div className="flex items-center gap-2">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Zap className="w-4 h-4 text-blue-500" />
+        </motion.div>
+        <div className="flex-1">
+          <p className="text-xs font-medium">{latestStep.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {latestStep.description}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Environment Spinner Component
+const EnvironmentSpinner: React.FC<{ isVisible: boolean }> = ({
+  isVisible,
+}) => {
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <div className="text-center">
+            <motion.div
+              animate={{
+                rotate: 360,
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                scale: { duration: 1, repeat: Infinity },
+              }}
+              className="w-16 h-16 mx-auto mb-4"
+            >
+              <Globe className="w-full h-full text-primary" />
+            </motion.div>
+            <h3 className="text-lg font-semibold mb-2">
+              Spinning up environment...
+            </h3>
+            <p className="text-muted-foreground">
+              Creating your development workspace
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Main Component
+const AIAgentWorkspace: React.FC = () => {
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      content: "Hello! I'm your AI development agent. What would you like me to build today?",
+      sender: "ai",
+      timestamp: new Date(),
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [timelineSteps, setTimelineSteps] = useState<TimelineStep[]>([
+    {
+      id: "1",
+      title: "Environment Setup",
+      description: "Initializing development environment",
+      status: "completed",
+      timestamp: new Date(),
+    },
+    {
+      id: "2",
+      title: "Planning Phase",
+      description: "Analyzing requirements and creating project structure",
+      status: "running",
+      timestamp: new Date(),
+    },
+  ]);
+  const [currentTheme, setCurrentTheme] = useState("purple-neon");
+  const [showEnvironmentSpinner, setShowEnvironmentSpinner] = useState(false);
+  const [activeView, setActiveView] = useState<"code" | "preview">("code");
+
+  const themes: Record<string, Theme> = {
+    "purple-neon": {
+      name: "Purple Neon",
+      primary: "rgb(147, 51, 234)",
+      secondary: "rgb(79, 70, 229)",
+      accent: "rgb(236, 72, 153)",
+      background: "rgb(15, 23, 42)",
+      text: "rgb(248, 250, 252)",
+    },
+    "tokyo-night": {
+      name: "Tokyo Night",
+      primary: "rgb(125, 211, 252)",
+      secondary: "rgb(34, 197, 94)",
+      accent: "rgb(251, 191, 36)",
+      background: "rgb(26, 32, 44)",
+      text: "rgb(237, 242, 247)",
+    },
+    "blue-explosion": {
+      name: "Blue Explosion",
+      primary: "rgb(59, 130, 246)",
+      secondary: "rgb(14, 165, 233)",
+      accent: "rgb(6, 182, 212)",
+      background: "rgb(30, 41, 59)",
+      text: "rgb(241, 245, 249)",
+    },
+  };
+
+  const fileTree: FileNode[] = [
+    {
+      id: "1",
+      name: "src",
+      type: "folder",
+      children: [
+        {
+          id: "2",
+          name: "components",
+          type: "folder",
+          children: [
+            {
+              id: "3",
+              name: "Header.tsx",
+              type: "file",
+              content: "import React from 'react';\n\nconst Header = () => {\n  return <header>My App</header>;\n};\n\nexport default Header;",
+            },
+            {
+              id: "4",
+              name: "Button.tsx",
+              type: "file",
+              content: "import React from 'react';\n\ninterface ButtonProps {\n  children: React.ReactNode;\n  onClick?: () => void;\n}\n\nconst Button: React.FC<ButtonProps> = ({ children, onClick }) => {\n  return (\n    <button onClick={onClick} className=\"btn\">\n      {children}\n    </button>\n  );\n};\n\nexport default Button;",
+            },
+          ],
+        },
+        {
+          id: "5",
+          name: "pages",
+          type: "folder",
+          children: [
+            {
+              id: "6",
+              name: "index.tsx",
+              type: "file",
+              content: "import React from 'react';\nimport Header from '../components/Header';\n\nconst HomePage = () => {\n  return (\n    <div>\n      <Header />\n      <main>Welcome to my app!</main>\n    </div>\n  );\n};\n\nexport default HomePage;",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "7",
+      name: "package.json",
+      type: "file",
+      content: '{\n  "name": "my-app",\n  "version": "1.0.0",\n  "dependencies": {\n    "react": "^18.0.0",\n    "typescript": "^4.9.0"\n  }\n}',
+    },
+  ];
+
+  const handleSendMessage = () => {
+    if (!inputValue.trim()) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setInputValue("");
+    setIsLoading(true);
+
+    // Simulate environment spinning up for new projects
+    if (inputValue.toLowerCase().includes("create") || inputValue.toLowerCase().includes("build")) {
+      setShowEnvironmentSpinner(true);
+      setTimeout(() => setShowEnvironmentSpinner(false), 3000);
+    }
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'll help you build that! Let me start by setting up the project structure and dependencies.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      setIsLoading(false);
+
+      // Add new timeline step
+      const newStep: TimelineStep = {
+        id: Date.now().toString(),
+        title: "Code Generation",
+        description: "Generating components and files",
+        status: "running",
+        timestamp: new Date(),
+      };
+      setTimelineSteps((prev) => [...prev, newStep]);
+    }, 2000);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const message: Message = {
+        id: Date.now().toString(),
+        content: `Uploaded file: ${file.name}`,
+        sender: "user",
+        timestamp: new Date(),
+        type: "file",
+      };
+      setMessages((prev) => [...prev, message]);
+    }
+  };
+
+  const downloadFile = (file: FileNode) => {
+    const blob = new Blob([file.content || ""], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadProject = () => {
+    // Simulate project download
+    const blob = new Blob(["Project files..."], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "project.zip";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div 
+      className="h-screen w-full bg-background text-foreground overflow-hidden relative"
+      style={{
+        background: `linear-gradient(135deg, ${themes[currentTheme]?.background || 'rgb(15, 23, 42)'} 0%, ${themes[currentTheme]?.primary || 'rgb(147, 51, 234)'}20 100%)`,
+      }}
+    >
+      <EnvironmentSpinner isVisible={showEnvironmentSpinner} />
+      
+      {/* Theme Selector */}
+      <div className="absolute top-4 left-4 z-40">
+        <select
+          value={currentTheme}
+          onChange={(e) => setCurrentTheme(e.target.value)}
+          className="bg-background border rounded px-2 py-1 text-sm"
+        >
+          {Object.entries(themes).map(([key, theme]) => (
+            <option key={key} value={key}>
+              {theme.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Left Panel Toggle */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="fixed left-4 top-1/2 -translate-y-1/2 z-30"
+        onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+      >
+        <PanelLeftOpen className="w-4 h-4" />
+      </Button>
+
+      {/* Right Panel Toggle */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="fixed right-4 top-1/2 -translate-y-1/2 z-30"
+        onClick={() => setRightPanelOpen(!rightPanelOpen)}
+      >
+        <PanelRightOpen className="w-4 h-4" />
+      </Button>
+
+      {/* Left Panel - File Tree */}
+      <AnimatePresence>
+        {leftPanelOpen && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -400, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed left-0 top-0 h-full w-80 bg-background/95 backdrop-blur border-r z-20"
+          >
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">File Explorer</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={downloadProject}
+                  className="text-xs"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Project
+                </Button>
+              </div>
+            </div>
+            <ScrollArea className="h-[calc(100%-80px)]">
+              <div className="p-4">
+                {fileTree.map((node) => (
+                  <FileTreeItem
+                    key={node.id}
+                    node={node}
+                    level={0}
+                    onFileSelect={setSelectedFile}
+                    selectedFile={selectedFile}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Right Panel - Code/Preview/Timeline */}
+      <AnimatePresence>
+        {rightPanelOpen && (
+          <motion.div
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 h-full w-80 bg-background/95 backdrop-blur border-l z-20"
+          >
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold">Development Tools</h3>
+                {selectedFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadFile(selectedFile)}
+                    className="text-xs"
+                  >
+                    <Download className="w-3 h-3 mr-1" />
+                    File
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant={activeView === "code" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveView("code")}
+                  className="text-xs"
+                >
+                  <Code className="w-3 h-3 mr-1" />
+                  Code
+                </Button>
+                <Button
+                  variant={activeView === "preview" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveView("preview")}
+                  className="text-xs"
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  Preview
+                </Button>
+              </div>
+            </div>
+            <ScrollArea className="h-[calc(100%-120px)]">
+              <div className="p-4">
+                {activeView === "code" && selectedFile ? (
+                  <div>
+                    <h4 className="font-medium mb-2">{selectedFile.name}</h4>
+                    <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+                      <code>{selectedFile.content || "// File content"}</code>
+                    </pre>
+                  </div>
+                ) : activeView === "preview" ? (
+                  <div>
+                    <h4 className="font-medium mb-2">Live Preview</h4>
+                    <div className="bg-muted p-4 rounded min-h-32 flex items-center justify-center">
+                      <p className="text-muted-foreground text-sm">
+                        Preview will appear here
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Timeline
+                    </h4>
+                    {timelineSteps.map((step, index) => (
+                      <TimelineItem
+                        key={step.id}
+                        step={step}
+                        isLast={index === timelineSteps.length - 1}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Central Chat Interface */}
+      <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-2xl h-[600px] mx-4 flex flex-col bg-background/95 backdrop-blur">
+          {/* Chat Header */}
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-semibold">AI Development Agent</h2>
+                <p className="text-sm text-muted-foreground">
+                  Full-stack application builder
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <ChatBubble key={message.id} message={message} />
+              ))}
+              {isLoading && (
+                <ChatBubble
+                  message={{
+                    id: "loading",
+                    content: "",
+                    sender: "ai",
+                    timestamp: new Date(),
+                  }}
+                  isLoading
+                />
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Chat Input */}
+          <div className="p-4 border-t">
+            <div className="flex gap-2 mb-3">
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => document.getElementById("file-upload")?.click()}
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Image className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Mic className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Textarea
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Describe the application you want me to build..."
+                className="flex-1 min-h-[40px] max-h-32 resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <Button onClick={handleSendMessage} disabled={!inputValue.trim()}>
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Live Ticker */}
+      <LiveTicker steps={timelineSteps} />
+    </div>
+  );
+};
+
+export default AIAgentWorkspace;

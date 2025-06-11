@@ -1,0 +1,21 @@
+# Express Mode dependencies (ADK coming soon)
+# google-ai-adk>=1.0.0  # Not yet publicly available
+vertexai>=1.38.0
+google-cloud-aiplatform>=1.38.0
+google-cloud-storage>=2.10.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.100.0
+
+# Enhanced async and performance
+asyncio-throttle>=1.0.2
+aiofiles>=23.1.0
+# uvloop>=0.17.0  # Windows compatibility issue
+
+# Monitoring and metrics
+prometheus-client>=0.17.0
+structlog>=23.1.0
+
+# Workflow patterns (ADK alternatives)
+# langchain>=0.1.0  # Optional - heavy dependency
+# crewai>=0.1.0     # Optional - not yet stable

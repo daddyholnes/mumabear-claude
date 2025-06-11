@@ -45,8 +45,7 @@ const defaultExperiences: Record<string, Experience> = {
     category: 'chat',
     isActive: false,
     metadata: { favorited: true, notifications: 0 },
-  },
-  'scout-orchestration': {
+  },  'scout-orchestration': {
     id: 'scout-orchestration',
     name: 'Scout Orchestration',
     icon: '🔍',
@@ -54,6 +53,15 @@ const defaultExperiences: Record<string, Experience> = {
     category: 'workspace',
     isActive: false,
     metadata: { favorited: false, notifications: 0 },
+  },
+  'dev-workspaces': {
+    id: 'dev-workspaces',
+    name: 'Development Workspaces',
+    icon: '💻',
+    description: 'VSCode-like development environment',
+    category: 'workspace',
+    isActive: false,
+    metadata: { favorited: true, notifications: 0 },
   },
   'agent-workbench': {
     id: 'agent-workbench',
