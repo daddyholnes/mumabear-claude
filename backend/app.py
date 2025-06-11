@@ -138,6 +138,16 @@ except ImportError as e:
     OPENAI_VERTEX_AVAILABLE = False
     integrate_openai_vertex_api = None
 
+# Try to import Multi-Modal Chat API
+try:
+    from api.multi_modal_chat_api import multi_modal_chat_bp
+    MULTI_MODAL_CHAT_AVAILABLE = True
+    logger.info("✅ Multi-Modal Chat API integration available")
+except ImportError as e:
+    logger.warning(f"Multi-Modal Chat API integration not available: {e}")
+    MULTI_MODAL_CHAT_AVAILABLE = False
+    multi_modal_chat_bp = None
+
 # Initialize Flask app
 app = Flask(__name__)
 settings = get_settings()
