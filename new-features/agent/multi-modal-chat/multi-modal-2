@@ -1,0 +1,977 @@
+"use client";
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import {
+  Bot,
+  Phone,
+  Video,
+  Mic,
+  MicOff,
+  Send,
+  Paperclip,
+  Settings,
+  Users,
+  MessageSquare,
+  Search,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  Image as ImageIcon,
+  FileText,
+  X,
+  Volume2,
+  VolumeX,
+  Globe,
+  Zap,
+  DollarSign,
+  Clock,
+  Star,
+  Menu,
+  Sun,
+  Moon,
+  Palette,
+  Monitor,
+  MonitorSpeaker,
+  Chrome,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+interface AIModel {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+  typing: boolean;
+  tokenCount: number;
+  pricePerMinute: number;
+  usage: number;
+  description: string;
+  capabilities: string[];
+  lastActive: string;
+}
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  sender: "user" | "ai";
+  timestamp: Date;
+  type: "text" | "image" | "file" | "audio";
+  fileName?: string;
+  fileSize?: string;
+}
+
+interface ChatHistory {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: Date;
+  modelId: string;
+}
+
+interface Theme {
+  name: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+}
+
+const themes: Theme[] = [
+  {
+    name: "Neon Purple Blaze",
+    primary: "from-purple-500 via-pink-500 to-orange-500",
+    secondary: "from-purple-600/20 to-pink-600/20",
+    accent: "purple-500",
+    background: "bg-gradient-to-br from-purple-900 via-pink-900 to-orange-900",
+    text: "text-purple-100"
+  },
+  {
+    name: "Electric Sunset",
+    primary: "from-orange-400 via-red-500 to-pink-600",
+    secondary: "from-orange-500/20 to-pink-500/20",
+    accent: "orange-500",
+    background: "bg-gradient-to-br from-orange-900 via-red-900 to-pink-900",
+    text: "text-orange-100"
+  },
+  {
+    name: "Cyber Mint",
+    primary: "from-cyan-400 via-teal-500 to-green-500",
+    secondary: "from-cyan-500/20 to-green-500/20",
+    accent: "cyan-500",
+    background: "bg-gradient-to-br from-cyan-900 via-teal-900 to-green-900",
+    text: "text-cyan-100"
+  },
+  {
+    name: "Royal Galaxy",
+    primary: "from-indigo-500 via-purple-600 to-blue-600",
+    secondary: "from-indigo-600/20 to-blue-600/20",
+    accent: "indigo-500",
+    background: "bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900",
+    text: "text-indigo-100"
+  }
+];
+
+const mockModels: AIModel[] = [
+  {
+    id: "gpt-4",
+    name: "GPT-4",
+    avatar: "🤖",
+    online: true,
+    typing: false,
+    tokenCount: 128000,
+    pricePerMinute: 0.03,
+    usage: 75,
+    description: "Advanced language model for complex tasks",
+    capabilities: ["Text", "Code", "Analysis", "Creative Writing"],
+    lastActive: "2 minutes ago"
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    avatar: "🧠",
+    online: true,
+    typing: false,
+    tokenCount: 100000,
+    pricePerMinute: 0.025,
+    usage: 45,
+    description: "Helpful, harmless, and honest AI assistant",
+    capabilities: ["Text", "Analysis", "Math", "Coding"],
+    lastActive: "5 minutes ago"
+  },
+  {
+    id: "gemini",
+    name: "Gemini",
+    avatar: "💎",
+    online: false,
+    typing: false,
+    tokenCount: 32000,
+    pricePerMinute: 0.02,
+    usage: 30,
+    description: "Google's multimodal AI model",
+    capabilities: ["Text", "Images", "Video", "Audio"],
+    lastActive: "1 hour ago"
+  }
+];
+
+const mockChatHistory: ChatHistory[] = [
+  {
+    id: "1",
+    title: "Web Development Help",
+    lastMessage: "Thanks for the React tips!",
+    timestamp: new Date(Date.now() - 1000 * 60 * 30),
+    modelId: "gpt-4"
+  },
+  {
+    id: "2",
+    title: "Code Review",
+    lastMessage: "The algorithm looks good",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+    modelId: "claude"
+  },
+  {
+    id: "3",
+    title: "Creative Writing",
+    lastMessage: "Here's your story outline",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    modelId: "gpt-4"
+  }
+];
+
+const googleVoices = [
+  "en-US-Wavenet-A", "en-US-Wavenet-B", "en-US-Wavenet-C", "en-US-Wavenet-D",
+  "en-GB-Wavenet-A", "en-GB-Wavenet-B", "en-AU-Wavenet-A", "en-AU-Wavenet-B"
+];
+
+export function AIStudioMessenger() {
+    const [selectedModel, setSelectedModel] = useState<AIModel | null>(mockModels[0]);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[0]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [friendsListOpen, setFriendsListOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [speechToText, setSpeechToText] = useState(true);
+  const [textToSpeech, setTextToSpeech] = useState(true);
+  const [selectedVoice, setSelectedVoice] = useState(googleVoices[0]);
+  const [webSearch, setWebSearch] = useState(false);
+  const [functionCalling, setFunctionCalling] = useState(true);
+  const [dragActive, setDragActive] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [browserOpen, setBrowserOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = useCallback(() => {
+    if (!inputMessage.trim() && files.length === 0) return;
+
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
+      content: inputMessage,
+      sender: "user",
+      timestamp: new Date(),
+      type: files.length > 0 ? "file" : "text",
+      fileName: files[0]?.name,
+      fileSize: files[0] ? `${(files[0].size / 1024 / 1024).toFixed(2)} MB` : undefined
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setInputMessage("");
+    setFiles([]);
+
+    // Simulate AI response with speech bubble animation
+    setTimeout(() => {
+      if (selectedModel) {
+        const aiResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: `Hello! I'm ${selectedModel.name}. I received your message and I'm here to help you with whatever you need.`,
+          sender: "ai",
+          timestamp: new Date(),
+          type: "text"
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      }
+    }, 1000);
+  }, [inputMessage, files, selectedModel]);
+
+  const handleFileUpload = (uploadedFiles: FileList | null) => {
+    if (uploadedFiles) {
+      setFiles(Array.from(uploadedFiles));
+    }
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles) {
+      setFiles(Array.from(droppedFiles));
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+  }, []);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const startNewChat = () => {
+    setMessages([]);
+    setChatHistoryOpen(false);
+  };
+
+  const SpeechBubble = ({ message, isUser }: { message: ChatMessage; isUser: boolean }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={cn(
+        "flex gap-3 mb-4",
+        isUser ? "justify-end" : "justify-start"
+      )}
+    >
+      {!isUser && selectedModel && (
+        <Avatar className="w-8 h-8">
+          <AvatarFallback>{selectedModel.avatar}</AvatarFallback>
+        </Avatar>
+      )}
+      <motion.div
+        className={cn(
+          "max-w-[70%] p-3 rounded-2xl",
+          isUser
+            ? `bg-gradient-to-r ${currentTheme.primary} text-white`
+            : "bg-white dark:bg-gray-800 border shadow-sm"
+        )}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 400 }}
+      >
+        <p className="text-sm">{message.content}</p>
+        {message.fileName && (
+          <div className="mt-2 p-2 bg-black/10 rounded-lg">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="text-xs">{message.fileName}</span>
+              {message.fileSize && (
+                <Badge variant="secondary" className="text-xs">
+                  {message.fileSize}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+        <p className="text-xs opacity-70 mt-1">
+          {message.timestamp.toLocaleTimeString()}
+        </p>
+      </motion.div>
+      {isUser && (
+        <Avatar className="w-8 h-8">
+          <AvatarFallback>👤</AvatarFallback>
+        </Avatar>
+      )}
+    </motion.div>
+  );
+
+  return (
+    <div className={cn("h-screen flex", currentTheme.background)}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileUpload(e.target.files)}
+      />
+
+      {/* Collapsible Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="w-80 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border-r border-white/20 flex flex-col"
+          >
+                        <div className={cn("p-4 border-b border-white/20 bg-gradient-to-r", currentTheme.secondary)}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">AI Studio</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Theme Selector */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    Themes
+                  </h3>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {themes.map((theme) => (
+                    <Button
+                      key={theme.name}
+                      variant={currentTheme.name === theme.name ? "default" : "outline"}
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => setCurrentTheme(theme)}
+                    >
+                      <div className={cn("w-3 h-3 rounded-full mr-2 bg-gradient-to-r", theme.primary)} />
+                      {theme.name}
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <h3 className="text-sm font-medium">Quick Actions</h3>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setFriendsListOpen(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Models List
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setChatHistoryOpen(true)}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Chat History
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+                {/* Header */}
+        <div className={cn("backdrop-blur-xl border-b border-white/20 p-4 bg-gradient-to-r", currentTheme.secondary)}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+              {selectedModel && (
+                <>
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback>{selectedModel.avatar}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h1 className="font-semibold">{selectedModel.name}</h1>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        selectedModel.online ? "bg-green-500" : "bg-gray-400"
+                      )} />
+                      <span className="text-xs text-gray-500">
+                        {selectedModel.online ? "Online" : "Offline"}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" className="hover:bg-white/10">
+                <Search className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative hover:bg-white/10",
+                  isRecording && "text-red-400"
+                )}
+                onClick={() => setIsRecording(!isRecording)}
+              >
+                <Phone className="w-4 h-4" />
+                {isRecording && (
+                  <motion.div
+                    className="absolute inset-0 bg-red-500/20 rounded"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                )}
+              </Button>
+              <Button variant="ghost" size="sm" className="hover:bg-white/10">
+                <Video className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative hover:bg-white/10",
+                  isScreenSharing && "text-green-400"
+                )}
+                onClick={() => setIsScreenSharing(!isScreenSharing)}
+              >
+                <Monitor className="w-4 h-4" />
+                {isScreenSharing && (
+                  <motion.div
+                    className="absolute inset-0 bg-green-500/20 rounded"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-white/10"
+                onClick={() => setBrowserOpen(!browserOpen)}
+              >
+                <Chrome className="w-4 h-4" />
+              </Button>
+                            <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-white/10"
+                onClick={() => setSettingsOpen(!settingsOpen)}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          <AnimatePresence>
+            {dragActive && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center"
+              >
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl text-center">
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-blue-500" />
+                  <h3 className="text-lg font-semibold mb-2">Drop files here</h3>
+                  <p className="text-gray-500">Release to upload</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {messages.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <Bot className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">Start a conversation</h3>
+                <p className="text-gray-500">Send a message to begin chatting with {selectedModel?.name}</p>
+              </div>
+            </div>
+          ) : (
+            <AnimatePresence>
+              {messages.map((message) => (
+                <SpeechBubble
+                  key={message.id}
+                  message={message}
+                  isUser={message.sender === "user"}
+                />
+              ))}
+            </AnimatePresence>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+                {/* Browser Modal */}
+        <AnimatePresence>
+          {browserOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-20 right-4 w-96 h-64 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl z-40"
+            >
+              <div className={cn("p-3 border-b border-white/20 bg-gradient-to-r", currentTheme.secondary, "rounded-t-2xl")}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Chrome className="w-4 h-4" />
+                    <span className="text-sm font-medium">Browser Share</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setBrowserOpen(false)}
+                    className="hover:bg-white/10"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-4 h-full">
+                <div className="bg-gradient-to-br from-white/5 to-white/10 rounded-lg h-full flex items-center justify-center border border-white/10">
+                  <div className="text-center">
+                    <MonitorSpeaker className="w-12 h-12 mx-auto mb-3 text-white/60" />
+                    <p className="text-sm text-white/80 mb-3">Share your browser</p>
+                    <Button
+                      size="sm"
+                      className={cn("bg-gradient-to-r text-white", currentTheme.primary)}
+                    >
+                      Start Sharing
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Input Area */}
+        <div className={cn("backdrop-blur-xl border-t border-white/20 p-4 bg-gradient-to-r", currentTheme.secondary)}>
+          {files.length > 0 && (
+            <div className="mb-3 flex gap-2 flex-wrap">
+              {files.map((file, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="text-sm">{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={`Message ${selectedModel?.name}...`}
+                className="min-h-[44px] max-h-32 resize-none"
+                rows={1}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+                            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="hover:bg-white/10"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsRecording(!isRecording)}
+                className={cn("hover:bg-white/10", isRecording && "text-red-400")}
+              >
+                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() && files.length === 0}
+                className={cn("bg-gradient-to-r", currentTheme.primary)}
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Friends/Models List Modal */}
+      <AnimatePresence>
+        {friendsListOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setFriendsListOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">AI Models</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFriendsListOpen(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4 overflow-y-auto">
+                {mockModels.map((model) => (
+                                    <motion.div
+                    key={model.id}
+                    whileHover={{ scale: 1.02 }}
+                    className={cn(
+                      "p-4 rounded-xl border cursor-pointer transition-all",
+                      selectedModel?.id === model.id
+                        ? `border-${currentTheme.accent} bg-gradient-to-r ${currentTheme.secondary}`
+                        : "border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10"
+                    )}
+                    onClick={() => {
+                      setSelectedModel(model);
+                      setFriendsListOpen(false);
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar className="w-12 h-12">
+                        <AvatarFallback className="text-lg">{model.avatar}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">{model.name}</h3>
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            model.online ? "bg-green-500" : "bg-gray-400"
+                          )} />
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          {model.description}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Zap className="w-3 h-3" />
+                            {model.tokenCount.toLocaleString()} tokens
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            ${model.pricePerMinute}/min
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {model.usage}% usage
+                          </div>
+                        </div>
+                        <div className="flex gap-1 mt-2">
+                          {model.capabilities.map((cap) => (
+                            <Badge key={cap} variant="secondary" className="text-xs">
+                              {cap}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Chat History Modal */}
+      <AnimatePresence>
+        {chatHistoryOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setChatHistoryOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Chat History</h2>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={startNewChat}
+                    >
+                      New Chat
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setChatHistoryOpen(false)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 space-y-3 overflow-y-auto">
+                {mockChatHistory.slice(0, 5).map((chat) => (
+                                    <motion.div
+                    key={chat.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="p-3 rounded-lg border border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10 cursor-pointer"
+                    onClick={() => setChatHistoryOpen(false)}
+                  >
+                    <h3 className="font-medium text-sm">{chat.title}</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      {chat.lastMessage}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {chat.timestamp.toLocaleDateString()}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSettingsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Settings</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSettingsOpen(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-6 space-y-6 overflow-y-auto">
+                {/* Voice Settings */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Volume2 className="w-4 h-4" />
+                    Voice Settings
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Speech to Text</span>
+                      <Switch
+                        checked={speechToText}
+                        onCheckedChange={setSpeechToText}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Text to Speech</span>
+                      <Switch
+                        checked={textToSpeech}
+                        onCheckedChange={setTextToSpeech}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Google Voice</label>
+                      <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {googleVoices.map((voice) => (
+                            <SelectItem key={voice} value={voice}>
+                              {voice}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* AI Features */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Bot className="w-4 h-4" />
+                    AI Features
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Web Search</span>
+                        <p className="text-xs text-gray-500">Allow AI to search the web</p>
+                      </div>
+                      <Switch
+                        checked={webSearch}
+                        onCheckedChange={setWebSearch}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Function Calling</span>
+                        <p className="text-xs text-gray-500">Enable advanced AI capabilities</p>
+                      </div>
+                      <Switch
+                        checked={functionCalling}
+                        onCheckedChange={setFunctionCalling}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Audio Settings */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Mic className="w-4 h-4" />
+                    Audio Settings
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Mute Notifications</span>
+                    <Switch
+                      checked={isMuted}
+                      onCheckedChange={setIsMuted}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function Demo() {
+  return <AIStudioMessenger />;
+}

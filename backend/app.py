@@ -124,6 +124,20 @@ except ImportError as e:
     ADKAgentWorkbench = None
     create_adk_blueprint = None
 
+# Try to import OpenAI Vertex AI service
+try:
+    from api.openai_vertex_api_simple import integrate_openai_vertex_api
+    OPENAI_VERTEX_AVAILABLE = True
+    logger.info("✅ OpenAI via Vertex AI Model Garden service available")
+except ImportError as e:
+    logger.warning(f"OpenAI via Vertex AI Model Garden service not available: {e}")
+    OPENAI_VERTEX_AVAILABLE = False
+    integrate_openai_vertex_api = None
+except ImportError as e:
+    logger.warning(f"OpenAI Vertex AI service not available: {e}")
+    OPENAI_VERTEX_AVAILABLE = False
+    integrate_openai_vertex_api = None
+
 # Initialize Flask app
 app = Flask(__name__)
 settings = get_settings()
@@ -309,12 +323,22 @@ async def initialize_sanctuary_services():
                 logger.info("✅ Agent Creation Workbench API registered")
             except ImportError as e:
                 logger.warning(f"Agent Workbench API not available: {e}")
-            
-            # Register Live API Studio routes
+              # Register Live API Studio routes
             app.register_blueprint(memory_bp, url_prefix='/api/memory')
             app.register_blueprint(chat_bp, url_prefix='/api/chat')
             app.register_blueprint(scrape_bp, url_prefix='/api/scrape')
             logger.info("✅ Live API Studio routes registered")
+            
+            # Register OpenAI via Vertex AI Model Garden API
+            if OPENAI_VERTEX_AVAILABLE:
+                try:
+                    integrate_openai_vertex_api(app)
+                    logger.info("✅ OpenAI via Vertex AI Model Garden API registered")
+                    logger.info("🤖 OpenAI models now available at /api/openai-vertex/*")
+                except Exception as e:
+                    logger.error(f"Failed to register OpenAI Vertex API: {e}")
+            else:
+                logger.info("📋 OpenAI Vertex AI service not available")
             
             logger.info("✅ API blueprints registered successfully")
         except Exception as e:
