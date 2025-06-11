@@ -338,8 +338,7 @@ async def initialize_sanctuary_services():
             app.register_blueprint(chat_bp, url_prefix='/api/chat')
             app.register_blueprint(scrape_bp, url_prefix='/api/scrape')
             logger.info("✅ Live API Studio routes registered")
-            
-            # Register OpenAI via Vertex AI Model Garden API
+              # Register OpenAI via Vertex AI Model Garden API
             if OPENAI_VERTEX_AVAILABLE:
                 try:
                     integrate_openai_vertex_api(app)
@@ -349,6 +348,17 @@ async def initialize_sanctuary_services():
                     logger.error(f"Failed to register OpenAI Vertex API: {e}")
             else:
                 logger.info("📋 OpenAI Vertex AI service not available")
+            
+            # Register Multi-Modal Chat API
+            if MULTI_MODAL_CHAT_AVAILABLE:
+                try:
+                    app.register_blueprint(multi_modal_chat_bp)
+                    logger.info("✅ Multi-Modal Chat API registered")
+                    logger.info("🤖 AI Friends messenger available at /api/chat/*")
+                except Exception as e:
+                    logger.error(f"Failed to register Multi-Modal Chat API: {e}")
+            else:
+                logger.info("📋 Multi-Modal Chat API not available")
             
             logger.info("✅ API blueprints registered successfully")
         except Exception as e:
